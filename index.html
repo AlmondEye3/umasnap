@@ -4,15 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UMA snap - UMA Snap 프레임</title>
-    
     <link rel="icon" href="app_icon.png" type="image/png">
-    
     <style>
         :root { --primary: #ff4757; --secondary: #3498db; --success: #2ed573; --bg: #f1f2f6; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: #2f3542; }
         .app-container { max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: 400px 1fr; gap: 25px; }
         
-        /* 패널 설정 */
         .panel { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); height: fit-content; position: sticky; top: 20px; }
         .panel h3 { margin-top: 0; border-bottom: 2px solid var(--bg); padding-bottom: 15px; color: var(--secondary); }
         
@@ -24,7 +21,6 @@
 
         input[type="range"] { width: 100%; cursor: pointer; margin-top: 5px; }
 
-        /* 프레임 선택창: 격자 세로 스크롤 */
         .frame-list { 
             display: grid; 
             grid-template-columns: repeat(4, 1fr); 
@@ -42,14 +38,26 @@
         .frame-thumb { width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; object-fit: contain; background: white; transition: 0.2s; }
         .frame-thumb.active { border-color: var(--primary); transform: scale(1.05); box-shadow: 0 4px 10px rgba(255, 71, 87, 0.2); }
 
-        /* 미리보기 영역 */
         .preview-section { background: white; padding: 25px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; }
-        canvas { max-width: 100%; max-height: 85vh; border-radius: 5px; box-shadow: 0 20px 50px rgba(0,0,0,0.25); background: #fff; cursor: grab; }
+        
+        /* 터치 시 화면 스크롤 방지를 위해 touch-action 설정 */
+        canvas { 
+            max-width: 100%; 
+            max-height: 85vh; 
+            border-radius: 5px; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.25); 
+            background: #fff; 
+            cursor: grab;
+            touch-action: none; 
+        }
         canvas:active { cursor: grabbing; }
 
         #save-btn { background: var(--success); color: white; border: none; padding: 18px; border-radius: 12px; cursor: pointer; width: 100%; font-size: 18px; font-weight: bold; margin-top: 20px; }
         
-        @media (max-width: 1100px) { .app-container { grid-template-columns: 1fr; } .panel { position: relative; top: 0; } }
+        @media (max-width: 1100px) { 
+            .app-container { grid-template-columns: 1fr; } 
+            .panel { position: relative; top: 0; } 
+        }
     </style>
 </head>
 <body>
@@ -57,9 +65,8 @@
     <div class="app-container">
         <div class="panel">
             <h3>✨ UMA Snap </h3>
-            
             <input type="file" id="file-input" accept="image/*" style="display: none;">
-            <div id="drop-zone">사진을 클릭하거나 드래그하여 업로드</div>
+            <div id="drop-zone">사진 클릭/드래그 업로드</div>
 
             <div class="control-group">
                 <label class="label">1. 프레임 디자인 선택</label>
@@ -77,7 +84,7 @@
             </div>
 
             <div class="control-group">
-                <label class="label">2. 사진 조정 (드래그 지원)</label>
+                <label class="label">2. 사진 조정 (드래그/터치 지원)</label>
                 <div style="font-size: 11px; color: #999;">Zoom</div>
                 <input type="range" id="zoom" min="0.1" max="5" step="0.01" value="1">
                 <div style="font-size: 11px; color: #999; margin-top: 10px;">X / Y 이동 (슬라이더)</div>
@@ -102,8 +109,8 @@
         <div class="preview-section">
             <canvas id="main-canvas"></canvas>
             <div id="no-img-msg" style="color: #aaa; font-size: 14px; text-align: center; margin-top: 20px;">
-                사진을 업로드하여 편집을 시작하세요. (1080x1440 고정)<br>
-                마우스로 사진을 직접 잡고 옮길 수 있습니다.
+                사진을 업로드하여 편집을 시작하세요.<br>
+                (PC 마우스 / 모바일 터치 드래그 모두 지원)
             </div>
         </div>
     </div>
@@ -118,21 +125,19 @@
         let userImg = new Image();
         let isUserImgLoaded = false;
         
-        // 상태 관리 (1080x1440 = 0.75 비율)
         let state = {
             ratio: 0.75, 
             zoom: 1,
             x: 0,
             y: 0,
-            frameUrl: '250605_umasnap_frame_sw.png', // 첫 번째 프레임으로 기본값 설정
+            frameUrl: '250605_umasnap_frame_sw.png',
             quality: 0.95
         };
 
         let isDragging = false;
-        let lastMouseX = 0;
-        let lastMouseY = 0;
+        let lastX = 0;
+        let lastY = 0;
 
-        // 프레임 로드 함수
         function loadFrame(url) {
             frameImg = new Image();
             frameImg.crossOrigin = "Anonymous";
@@ -160,7 +165,6 @@
                 userImg.onload = () => {
                     isUserImgLoaded = true;
                     document.getElementById('no-img-msg').style.display = 'none';
-                    // 초기 자동 줌
                     state.zoom = Math.max(1080 / userImg.width, 1440 / userImg.height);
                     document.getElementById('zoom').value = state.zoom;
                     draw();
@@ -170,22 +174,22 @@
             reader.readAsDataURL(file);
         }
 
-        // --- 마우스 드래그 ---
-        canvas.onmousedown = (e) => {
+        // --- 드래그 & 터치 통합 로직 ---
+        function startDrag(x, y) {
             if (!isUserImgLoaded) return;
             isDragging = true;
-            lastMouseX = e.clientX;
-            lastMouseY = e.clientY;
-        };
+            lastX = x;
+            lastY = y;
+        }
 
-        window.onmousemove = (e) => {
+        function moveDrag(x, y) {
             if (!isDragging) return;
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
 
-            const deltaX = (e.clientX - lastMouseX) * scaleX;
-            const deltaY = (e.clientY - lastMouseY) * scaleY;
+            const deltaX = (x - lastX) * scaleX;
+            const deltaY = (y - lastY) * scaleY;
 
             state.x += deltaX;
             state.y += deltaY;
@@ -193,14 +197,33 @@
             document.getElementById('moveX').value = state.x;
             document.getElementById('moveY').value = state.y;
 
-            lastMouseX = e.clientX;
-            lastMouseY = e.clientY;
+            lastX = x;
+            lastY = y;
             draw();
-        };
+        }
 
-        window.onmouseup = () => { isDragging = false; };
+        function endDrag() { isDragging = false; }
 
-        // --- 컨트롤 업데이트 ---
+        // 마우스 이벤트
+        canvas.onmousedown = (e) => startDrag(e.clientX, e.clientY);
+        window.onmousemove = (e) => moveDrag(e.clientX, e.clientY);
+        window.onmouseup = endDrag;
+
+        // [핵심] 터치 이벤트 (모바일 지원)
+        canvas.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            startDrag(touch.clientX, touch.clientY);
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault(); // 스크롤 방지
+            const touch = e.touches[0];
+            moveDrag(touch.clientX, touch.clientY);
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', endDrag);
+
+        // --- 기타 컨트롤 ---
         document.querySelectorAll('input[type="range"]').forEach(input => {
             input.addEventListener('input', () => {
                 state.zoom = parseFloat(document.getElementById('zoom').value);
@@ -222,10 +245,8 @@
         function draw() {
             canvas.width = 1080;
             canvas.height = 1440;
-
             ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
             if (isUserImgLoaded) {
                 const imgW = userImg.width * state.zoom;
                 const imgH = userImg.height * state.zoom;
@@ -240,7 +261,7 @@
             if (!isUserImgLoaded) return alert("사진을 업로드해주세요.");
             const format = document.querySelector('input[name="format"]:checked').value;
             const link = document.createElement('a');
-            link.download = `umasnap_1080x1440_${Date.now()}.${format}`;
+            link.download = `umasnap_pro_${Date.now()}.${format}`;
             try {
                 link.href = canvas.toDataURL(`image/${format}`, state.quality);
                 link.click();
