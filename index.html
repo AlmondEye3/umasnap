@@ -8,189 +8,75 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #ff4757;
-            --accent: #5352ed;
-            --success: #2ed573;
-            --bg-deep: #0f0f0f;
-            --bg-panel: rgba(30, 30, 30, 0.8);
-            --text-main: #f1f2f6;
-            --text-dim: #a4b0be;
-            --border: rgba(255, 255, 255, 0.1);
+            --primary: #ff4757; --accent: #5352ed; --success: #2ed573;
+            --bg-deep: #0f0f0f; --bg-panel: rgba(30, 30, 30, 0.8);
+            --text-main: #f1f2f6; --text-dim: #a4b0be; --border: rgba(255, 255, 255, 0.1);
             --card-bg: rgba(47, 53, 66, 0.5);
         }
-
-        /* 기본 레이아웃 */
-        body { 
-            font-family: 'Inter', -apple-system, sans-serif; 
-            background-color: var(--bg-deep); 
-            margin: 0; padding: 0; 
-            color: var(--text-main); 
-            display: flex; 
-            justify-content: center; 
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        .app-container { 
-            width: 100%;
-            max-width: 1400px; 
-            display: grid; 
-            grid-template-columns: 420px 1fr; 
-            gap: 0;
-            height: 100vh;
-        }
-
-        /* 사이드바 (컨트롤 패널) */
-        .panel { 
-            background: var(--bg-panel);
-            backdrop-filter: blur(20px);
-            padding: 30px; 
-            border-right: 1px solid var(--border);
-            height: 100vh;
-            overflow-y: auto;
-            box-sizing: border-box;
-            z-index: 10;
-        }
-
-        .panel h1 { 
-            font-size: 24px; font-weight: 800; margin-bottom: 30px; 
-            letter-spacing: -1px; background: linear-gradient(45deg, var(--primary), #ff6b81);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-
-        /* 섹션 타이틀 */
-        .section-header { 
-            font-size: 12px; font-weight: 700; color: var(--text-dim); 
-            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px;
-            display: flex; align-items: center; gap: 8px;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-deep); margin: 0; color: var(--text-main); display: flex; justify-content: center; height: 100vh; overflow: hidden; }
+        .app-container { width: 100%; max-width: 1400px; display: grid; grid-template-columns: 420px 1fr; height: 100vh; }
+        .panel { background: var(--bg-panel); backdrop-filter: blur(20px); padding: 30px; border-right: 1px solid var(--border); overflow-y: auto; box-sizing: border-box; }
+        .panel h1 { font-size: 24px; font-weight: 800; margin-bottom: 30px; letter-spacing: -1px; background: linear-gradient(45deg, var(--primary), #ff6b81); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .section-header { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
         .section-header::after { content: ""; flex: 1; height: 1px; background: var(--border); }
-
-        /* 업로드 존 */
-        #drop-zone { 
-            background: var(--card-bg); border: 1px dashed var(--border); 
-            border-radius: 16px; padding: 20px; text-align: center; cursor: pointer;
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 30px;
-        }
-        #drop-zone:hover { background: rgba(83, 82, 237, 0.1); border-color: var(--secondary); }
-
-        /* 슬라이더 커스텀 */
-        .control-item { margin-bottom: 25px; }
-        input[type="range"] { 
-            -webkit-appearance: none; width: 100%; background: transparent; 
-        }
-        input[type="range"]::-webkit-slider-runnable-track {
-            width: 100%; height: 4px; background: var(--border); border-radius: 2px;
-        }
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%;
-            background: var(--primary); cursor: pointer; margin-top: -7px; box-shadow: 0 0 10px rgba(255,71,87,0.4);
-        }
-
-        /* 프레임 리스트 (세련된 격자) */
-        .frame-grid { 
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; 
-            padding: 15px; background: var(--card-bg); border-radius: 16px;
-        }
-        .frame-thumb { 
-            width: 100%; aspect-ratio: 1/1; border-radius: 10px; cursor: pointer;
-            object-fit: contain; background: #fff; border: 2px solid transparent;
-            transition: 0.2s; opacity: 0.6;
-        }
-        .frame-thumb:hover { opacity: 1; transform: scale(1.05); }
+        #drop-zone { background: var(--card-bg); border: 1px dashed var(--border); border-radius: 16px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; margin-bottom: 30px; }
+        #drop-zone:hover { background: rgba(83, 82, 237, 0.1); }
+        .frame-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: var(--card-bg); padding: 12px; border-radius: 16px; }
+        .frame-thumb { width: 100%; aspect-ratio: 1/1; border-radius: 8px; cursor: pointer; background: #fff; border: 2px solid transparent; transition: 0.2s; opacity: 0.6; }
         .frame-thumb.active { border-color: var(--primary); opacity: 1; transform: scale(1.05); }
-
-        /* 메인 미리보기 창 */
-        .main-stage { 
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background-image: radial-gradient(circle at center, #1e1e1e 0%, #0f0f0f 100%);
-            position: relative; padding: 40px;
-        }
-        canvas { 
-            max-width: 95%; max-height: 85vh; border-radius: 4px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.5); cursor: grab; touch-action: none;
-        }
-        
-        /* 플로팅 저장 버튼 */
-        #save-btn { 
-            background: linear-gradient(135deg, var(--primary), #eb3b5a);
-            color: white; border: none; padding: 20px 40px; border-radius: 50px;
-            font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 30px;
-            box-shadow: 0 10px 30px rgba(255, 71, 87, 0.3); transition: 0.3s;
-        }
-        #save-btn:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 15px 40px rgba(255, 71, 87, 0.4); }
-
-        /* 내보내기 옵션 칩 */
+        .main-stage { display: flex; flex-direction: column; align-items: center; justify-content: center; background-image: radial-gradient(circle at center, #1e1e1e 0%, #0f0f0f 100%); flex: 1; padding: 40px; }
+        canvas { max-width: 95%; max-height: 85vh; border-radius: 4px; box-shadow: 0 30px 60px rgba(0,0,0,0.5); cursor: grab; touch-action: none; }
+        #save-btn { background: linear-gradient(135deg, var(--primary), #eb3b5a); color: white; border: none; padding: 18px; border-radius: 50px; font-size: 16px; font-weight: 800; cursor: pointer; width: 100%; margin-top: 25px; box-shadow: 0 10px 30px rgba(255, 71, 87, 0.3); }
         .chip-group { display: flex; gap: 8px; margin-bottom: 15px; }
-        .chip { 
-            padding: 8px 16px; border-radius: 20px; background: var(--card-bg); 
-            font-size: 12px; cursor: pointer; border: 1px solid var(--border);
-        }
+        .chip { padding: 8px 16px; border-radius: 20px; background: var(--card-bg); font-size: 11px; cursor: pointer; border: 1px solid var(--border); }
         .chip.active { background: var(--accent); border-color: var(--accent); }
-
-        @media (max-width: 1100px) {
-            .app-container { grid-template-columns: 1fr; height: auto; }
-            .panel { height: auto; position: static; width: 100%; }
-            .main-stage { min-height: 60vh; padding: 20px; }
-        }
+        input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; margin: 10px 0; }
+        input[type="range"]::-webkit-slider-runnable-track { height: 4px; background: var(--border); border-radius: 2px; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%; background: var(--primary); margin-top: -7px; box-shadow: 0 0 10px rgba(255,71,87,0.4); }
+        @media (max-width: 1100px) { .app-container { grid-template-columns: 1fr; overflow-y: auto; } .panel { height: auto; position: static; } .main-stage { min-height: 60vh; } }
     </style>
 </head>
 <body>
-
     <div class="app-container">
         <aside class="panel">
             <h1>UMA Snap</h1>
-            
             <input type="file" id="file-input" accept="image/*" style="display: none;">
-            <div id="drop-zone">
-                <div style="font-size: 24px; margin-bottom: 10px;">📤</div>
-                이미지 라이브러리 열기
+            <div id="drop-zone" onclick="document.getElementById('file-input').click()">이미지 라이브러리 열기</div>
+
+            <div class="section-header">Frames</div>
+            <div class="frame-grid">
+                <img src="250605_umasnap_frame_sw.png" class="frame-thumb active" onclick="changeFrame(this, '250605_umasnap_frame_sw.png')">
+                <img src="250605_umasnap_frame_ss.png" class="frame-thumb" onclick="changeFrame(this, '250605_umasnap_frame_ss.png')">
+                <img src="250605_umasnap_frame_tt.png" class="frame-thumb" onclick="changeFrame(this, '250605_umasnap_frame_tt.png')">
+                <img src="250605_umasnap_frame_ms.png" class="frame-thumb" onclick="changeFrame(this, '250605_umasnap_frame_ms.png')">
+                <img src="250605_umasnap_frame_oc.png" class="frame-thumb" onclick="changeFrame(this, '250605_umasnap_frame_oc.png')">
+                <img src="250605_umasnap_frame_ts.png" class="frame-thumb" onclick="changeFrame(this, '250605_umasnap_frame_ts.png')">
+                <img src="250605_umasnap_frame_mm.png" class="frame-thumb" onclick="changeFrame(this, '250605_umasnap_frame_mm.png')">
+                <img src="250605_umasnap_frame_sr.png" class="frame-thumb" onclick="changeFrame(this, '250605_umasnap_frame_sr.png')">
+                <img src="250605_umasnap_frame_rs.png" class="frame-thumb" onclick="changeFrame(this, '250605_umasnap_frame_rs.png')">
             </div>
 
-            <div class="control-item">
-                <div class="section-header">Frames</div>
-                <div class="frame-grid">
-                    <img src="250605_umasnap_frame_sw.png" class="frame-thumb active" onclick="changeFrame(this, '250605_umasnap_frame_sw.png')">
-                    <img src="250605_umasnap_frame_ss.png" class="frame-thumb" onclick="changeFrame(this, '250605_umasnap_frame_ss.png')">
-                    <img src="250605_umasnap_frame_tt.png" class="frame-thumb" onclick="changeFrame(this, '250605_umasnap_frame_tt.png')">
-                    <img src="250605_umasnap_frame_ms.png" class="frame-thumb" onclick="changeFrame(this, '250605_umasnap_frame_ms.png')">
-                    <img src="250605_umasnap_frame_oc.png" class="frame-thumb" onclick="changeFrame(this, '250605_umasnap_frame_oc.png')">
-                    <img src="250605_umasnap_frame_ts.png" class="frame-thumb" onclick="changeFrame(this, '250605_umasnap_frame_ts.png')">
-                    <img src="250605_umasnap_frame_mm.png" class="frame-thumb" onclick="changeFrame(this, '250605_umasnap_frame_mm.png')">
-                    <img src="250605_umasnap_frame_sr.png" class="frame-thumb" onclick="changeFrame(this, '250605_umasnap_frame_sr.png')">
-                    <img src="250605_umasnap_frame_rs.png" class="frame-thumb" onclick="changeFrame(this, '250605_umasnap_frame_rs.png')">
-                </div>
-            </div>
+            <div style="margin-top:25px" class="section-header">Adjustments</div>
+            <div style="font-size:11px; color:var(--text-dim)">Zoom (Centered by Default)</div>
+            <input type="range" id="zoom" min="0.1" max="5" step="0.01" value="2.5">
+            <div style="font-size:11px; color:var(--text-dim); margin-top:10px">Position (Double-click to Center)</div>
+            <input type="range" id="moveX" min="-2000" max="2000" value="0">
+            <input type="range" id="moveY" min="-2000" max="2000" value="0">
+            <button onclick="resetPosition()" style="background:none; border:none; color:var(--accent); font-size:11px; cursor:pointer; padding-top:10px;">Reset View</button>
 
-            <div class="control-item">
-                <div class="section-header">Adjustments</div>
-                <div class="label">Zoom</div>
-                <input type="range" id="zoom" min="0.1" max="5" step="0.01" value="1">
-                <div style="margin-top: 15px;" class="label">Position X / Y</div>
-                <input type="range" id="moveX" min="-2000" max="2000" value="0">
-                <input type="range" id="moveY" min="-2000" max="2000" value="0">
-                <button onclick="resetPosition()" style="background:none; border:none; color:var(--accent); font-size:12px; cursor:pointer; padding: 10px 0;">위치 초기화</button>
+            <div style="margin-top:25px" class="section-header">Export</div>
+            <div class="chip-group">
+                <label class="chip active"><input type="radio" name="format" value="webp" checked style="display:none"> WebP</label>
+                <label class="chip"><input type="radio" name="format" value="jpeg" style="display:none"> JPEG</label>
+                <label class="chip"><input type="radio" name="format" value="png" style="display:none"> PNG</label>
             </div>
-
-            <div class="control-item">
-                <div class="section-header">Export</div>
-                <div class="chip-group">
-                    <label class="chip active"><input type="radio" name="format" value="webp" checked style="display:none"> WebP</label>
-                    <label class="chip"><input type="radio" name="format" value="jpeg" style="display:none"> JPEG</label>
-                    <label class="chip"><input type="radio" name="format" value="png" style="display:none"> PNG</label>
-                </div>
-                <div id="q-label" style="font-size: 11px; margin-bottom: 5px;">품질: 95%</div>
-                <input type="range" id="quality" min="50" max="100" step="5" value="95">
-            </div>
-
+            <input type="range" id="quality" min="50" max="100" step="5" value="95">
             <button id="save-btn">EXPORT SNAP</button>
         </aside>
 
         <main class="main-stage">
             <canvas id="main-canvas"></canvas>
-            <div id="no-img-msg" style="color: var(--text-dim); font-size: 14px; margin-top: 20px;">
-                최적 해상도: 1080 x 1440
-            </div>
+            <div style="font-size: 12px; color: var(--text-dim); margin-top: 15px;">Wheel to Zoom | Double-click to Fit</div>
         </main>
     </div>
 
@@ -198,19 +84,26 @@
         const canvas = document.getElementById('main-canvas');
         const ctx = canvas.getContext('2d');
         const fileInput = document.getElementById('file-input');
-        const dropZone = document.getElementById('drop-zone');
-        
         let frameImg = new Image();
         let userImg = new Image();
         let isUserImgLoaded = false;
         
-        let state = {
-            ratio: 0.75, zoom: 1, x: 0, y: 0,
-            frameUrl: '250605_umasnap_frame_sw.png',
-            quality: 0.95
-        };
+        // 초기 Zoom 상태를 중앙값인 2.5로 설정
+        let state = { ratio: 0.75, zoom: 2.5, x: 0, y: 0, frameUrl: '250605_umasnap_frame_sw.png', quality: 0.95 };
 
-        // --- 사진 및 프레임 로직 ---
+        // 마우스 휠 줌
+        canvas.addEventListener('wheel', (e) => {
+            if (!isUserImgLoaded) return;
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.05 : 0.05;
+            state.zoom = Math.min(Math.max(state.zoom + delta, 0.1), 5);
+            document.getElementById('zoom').value = state.zoom;
+            draw();
+        }, { passive: false });
+
+        // 더블 클릭 초기화
+        canvas.ondblclick = () => { if (!isUserImgLoaded) return; resetPosition(); draw(); };
+
         function loadFrame(url) {
             frameImg = new Image();
             frameImg.crossOrigin = "Anonymous";
@@ -219,36 +112,29 @@
         }
         loadFrame(state.frameUrl);
 
-        dropZone.onclick = () => fileInput.click();
-        dropZone.ondragover = (e) => e.preventDefault();
-        dropZone.ondrop = (e) => { e.preventDefault(); handleFile(e.dataTransfer.files[0]); };
-        fileInput.onchange = (e) => handleFile(e.target.files[0]);
-
-        function handleFile(file) {
-            if (!file) return;
+        fileInput.onchange = (e) => {
             const reader = new FileReader();
-            reader.onload = (e) => {
+            reader.onload = (ev) => {
                 userImg = new Image();
                 userImg.onload = () => {
                     isUserImgLoaded = true;
-                    state.zoom = Math.max(1080 / userImg.width, 1440 / userImg.height);
+                    // 사진 불러올 때 줌을 강제로 줄이지 않고 중앙(2.5) 상태를 유지하거나
+                    // 원하신다면 중앙값으로 슬라이더를 세팅합니다.
                     document.getElementById('zoom').value = state.zoom;
                     draw();
                 };
-                userImg.src = e.target.result;
+                userImg.src = ev.target.result;
             };
-            reader.readAsDataURL(file);
-        }
+            reader.readAsDataURL(e.target.files[0]);
+        };
 
-        // --- 터치 및 드래그 (v6.4 기능 계승) ---
         let isDragging = false;
         let lastX = 0; let lastY = 0;
-        let initialPinchDist = 0;
-        let initialZoom = 1;
+        let initialPinchDist = 0; let initialZoom = 1;
 
         function startDrag(x, y) { if (!isUserImgLoaded) return; isDragging = true; lastX = x; lastY = y; }
-        function handleMove(x, y, isTouch = false, e = null) {
-            if (isTouch && e && e.touches.length === 2) {
+        function handleMove(x, y, e = null) {
+            if (e && e.touches && e.touches.length === 2) {
                 const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
                 if (!initialPinchDist) initialPinchDist = dist;
                 state.zoom = Math.min(Math.max(initialZoom * (dist / initialPinchDist), 0.1), 5);
@@ -271,10 +157,9 @@
             if(e.touches.length === 2) { initialPinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); initialZoom = state.zoom; }
             else startDrag(e.touches[0].clientX, e.touches[0].clientY);
         }, {passive:false});
-        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); handleMove(e.touches[0].clientX, e.touches[0].clientY, true, e); }, {passive:false});
+        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); handleMove(e.touches[0].clientX, e.touches[0].clientY, e); }, {passive:false});
         canvas.addEventListener('touchend', () => { isDragging = false; initialPinchDist = 0; });
 
-        // --- UI 인터랙션 ---
         function changeFrame(el, url) {
             document.querySelectorAll('.frame-thumb').forEach(t => t.classList.remove('active'));
             el.classList.add('active');
@@ -282,26 +167,20 @@
             loadFrame(url);
         }
 
-        function resetPosition() { state.x = 0; state.y = 0; document.getElementById('moveX').value = 0; document.getElementById('moveY').value = 0; draw(); }
+        function resetPosition() {
+            state.x = 0; state.y = 0;
+            state.zoom = 2.5; // 리셋 시에도 중앙값으로 복구
+            document.getElementById('moveX').value = 0;
+            document.getElementById('moveY').value = 0;
+            document.getElementById('zoom').value = state.zoom;
+        }
 
-        document.querySelectorAll('input[type="range"]').forEach(input => {
-            input.addEventListener('input', () => {
-                state.zoom = parseFloat(document.getElementById('zoom').value);
-                state.x = parseInt(document.getElementById('moveX').value);
-                state.y = parseInt(document.getElementById('moveY').value);
-                state.quality = parseInt(document.getElementById('quality').value) / 100;
-                document.getElementById('q-label').innerText = `품질: ${document.getElementById('quality').value}%`;
-                draw();
-            });
-        });
-
-        // 칩 선택 효과
-        document.querySelectorAll('.chip').forEach(chip => {
-            chip.onclick = function() {
-                document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-                this.classList.add('active');
-            };
-        });
+        document.querySelectorAll('input[type="range"]').forEach(i => i.addEventListener('input', () => {
+            state.zoom = parseFloat(document.getElementById('zoom').value);
+            state.x = parseInt(document.getElementById('moveX').value);
+            state.y = parseInt(document.getElementById('moveY').value);
+            draw();
+        }));
 
         function draw() {
             canvas.width = 1080; canvas.height = 1440;
@@ -316,7 +195,7 @@
         }
 
         document.getElementById('save-btn').onclick = () => {
-            if (!isUserImgLoaded) return alert("먼저 사진을 불러와주세요.");
+            if (!isUserImgLoaded) return;
             const format = document.querySelector('input[name="format"]:checked').value;
             const link = document.createElement('a');
             link.download = `UMASNAP_PRO_${Date.now()}.${format}`;
