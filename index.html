@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>UMA Snap</title>
+    <title>UMA Stargram</title>
     <link rel="icon" href="app_icon.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
@@ -16,9 +16,8 @@
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-deep); margin: 0; color: var(--text-main); display: flex; justify-content: center; height: 100vh; overflow: hidden; }
         .app-container { width: 100%; max-width: 1400px; display: grid; grid-template-columns: 420px 1fr; height: 100vh; }
         
-        /* 사이드바 패널 */
         .panel { background: var(--bg-panel); backdrop-filter: blur(30px); padding: 25px; border-right: 1px solid var(--border); overflow-y: auto; box-sizing: border-box; z-index: 10; scrollbar-width: thin; }
-        .panel h1 { font-size: 26px; font-weight: 800; margin-bottom: 25px; letter-spacing: -1.5px; background: linear-gradient(45deg, var(--primary), #eb3b5a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .panel h1 { font-size: 28px; font-weight: 800; margin-bottom: 25px; letter-spacing: -1.5px; background: linear-gradient(45deg, var(--primary), #eb3b5a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
         #drop-zone { background: var(--card-bg); border: 1px dashed var(--border); border-radius: 16px; padding: 15px; text-align: center; cursor: pointer; transition: 0.3s; margin-bottom: 20px; font-size: 13px; font-weight: 600; }
         #drop-zone.drag-over { background: rgba(83, 82, 237, 0.2); border-color: var(--accent); }
@@ -27,11 +26,9 @@
         .section-header::after { content: ""; flex: 1; height: 1px; background: var(--border); }
         
         .frame-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; background: var(--card-bg); padding: 10px; border-radius: 16px; }
-        .frame-thumb { width: 100%; aspect-ratio: 1/1; border-radius: 6px; cursor: pointer; background: #fff; border: 2px solid transparent; transition: 0.2s; opacity: 0.5; filter: grayscale(30%); }
-        .frame-thumb:hover { opacity: 1; filter: grayscale(0%); }
-        .frame-thumb.active { border-color: var(--primary); opacity: 1; filter: grayscale(0%); transform: scale(1.05); box-shadow: 0 0 15px rgba(255, 71, 87, 0.3); }
+        .frame-thumb { width: 100%; aspect-ratio: 1/1; border-radius: 6px; cursor: pointer; background: #fff; border: 2px solid transparent; transition: 0.2s; opacity: 0.5; }
+        .frame-thumb.active { border-color: var(--primary); opacity: 1; transform: scale(1.05); box-shadow: 0 0 15px rgba(255, 71, 87, 0.3); }
         
-        /* 툴 그룹 (회전, 반전) */
         .tool-group { display: flex; gap: 8px; margin-bottom: 15px; }
         .tool-btn { flex: 1; background: var(--card-bg); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 600; transition: 0.2s; }
         .tool-btn:hover { background: var(--border); }
@@ -43,12 +40,10 @@
         input[type="range"]::-webkit-slider-runnable-track { height: 3px; background: var(--border); border-radius: 2px; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: var(--primary); margin-top: -6.5px; cursor: pointer; border: 2px solid var(--bg-deep); }
         
-        /* 메인 스테이지 */
         .main-stage { display: flex; flex-direction: column; align-items: center; justify-content: center; background-image: radial-gradient(circle at center, #1e1e1e 0%, #0a0a0a 100%); flex: 1; padding: 20px; position: relative; }
-        canvas { max-width: 95%; max-height: 85vh; border-radius: 4px; box-shadow: 0 40px 80px rgba(0,0,0,0.6); cursor: grab; touch-action: none; transition: filter 0.1s; }
+        canvas { max-width: 95%; max-height: 85vh; border-radius: 4px; box-shadow: 0 40px 80px rgba(0,0,0,0.6); cursor: grab; touch-action: none; }
         
-        #save-btn { background: linear-gradient(135deg, var(--primary), #eb3b5a); color: white; border: none; padding: 16px; border-radius: 50px; font-size: 15px; font-weight: 800; cursor: pointer; width: 100%; margin-top: 15px; box-shadow: 0 10px 25px rgba(255, 71, 87, 0.3); transition: 0.3s; }
-        #save-btn:active { transform: scale(0.98); }
+        #save-btn { background: linear-gradient(135deg, var(--primary), #eb3b5a); color: white; border: none; padding: 16px; border-radius: 50px; font-size: 15px; font-weight: 800; cursor: pointer; width: 100%; margin-top: 15px; box-shadow: 0 10px 25px rgba(255, 71, 87, 0.3); }
 
         .chip-group { display: flex; gap: 6px; }
         .chip { flex: 1; text-align: center; padding: 8px; border-radius: 10px; background: var(--card-bg); font-size: 11px; cursor: pointer; border: 1px solid var(--border); }
@@ -60,7 +55,7 @@
 <body>
     <div class="app-container">
         <aside class="panel">
-            <h1>UMA Snap<span style="font-size: 12px; font-weight: 400; color: var(--text-dim); vertical-align: middle;">ULTRA</span></h1>
+            <h1>UMA Stargram</h1>
             
             <input type="file" id="file-input" accept="image/*" style="display: none;">
             <div id="drop-zone" onclick="document.getElementById('file-input').click()">📁 이미지 불러오기 (Drag & Drop)</div>
@@ -91,12 +86,12 @@
                 <input type="range" id="zoom" min="0.1" max="5" step="0.01" value="2.5">
             </div>
             <div class="control-item">
-                <div class="label-row"><span>Brightness</span><span id="b-val">100%</span></div>
-                <input type="range" id="bright" min="50" max="150" step="1" value="100">
+                <div class="label-row"><span>상하 이동 (Move Y)</span><span id="y-val">0</span></div>
+                <input type="range" id="moveY" min="-2000" max="2000" step="1" value="0">
             </div>
             <div class="control-item">
-                <div class="label-row"><span>Contrast</span><span id="c-val">100%</span></div>
-                <input type="range" id="contrast" min="50" max="150" step="1" value="100">
+                <div class="label-row"><span>좌우 이동 (Move X)</span><span id="x-val">0</span></div>
+                <input type="range" id="moveX" min="-2000" max="2000" step="1" value="0">
             </div>
             <button onclick="resetPosition()" style="background:none; border:none; color:var(--accent); font-size:11px; cursor:pointer; width:100%; text-align:right;">설정 초기화 (R)</button>
 
@@ -106,7 +101,7 @@
                 <label class="chip"><input type="radio" name="format" value="jpeg" style="display:none"> JPEG</label>
                 <label class="chip"><input type="radio" name="format" value="png" style="display:none"> PNG</label>
             </div>
-            <button id="save-btn">EXPORT SNAP (S)</button>
+            <button id="save-btn">EXPORT STARGRAM (S)</button>
         </aside>
 
         <main class="main-stage" id="main-stage">
@@ -128,18 +123,17 @@
         let userImg = new Image();
         let isUserImgLoaded = false;
         
+        // 상태값에서 보정 필터(bright, contrast) 제거
         let state = { 
             ratio: 0.75, zoom: 2.5, x: 0, y: 0, 
-            rotate: 0, flip: 1, // 회전 및 반전 상태
-            bright: 100, contrast: 100, // 보정 상태
+            rotate: 0, flip: 1,
             frameUrl: '250605_umasnap_frame.png', quality: 0.95 
         };
 
-        // --- 회전 및 반전 함수 ---
         function rotatePhoto() { state.rotate = (state.rotate + 90) % 360; draw(); }
         function flipPhoto() { state.flip *= -1; draw(); }
 
-        // --- 드래그 앤 드롭 ---
+        // 드래그 앤 드롭
         ['dragenter', 'dragover'].forEach(n => {
             dropZone.addEventListener(n, e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
             mainStage.addEventListener(n, e => { e.preventDefault(); mainStage.classList.add('drag-over'); });
@@ -165,21 +159,18 @@
             reader.readAsDataURL(file);
         }
 
-        // --- 키보드 단축키 ---
         window.addEventListener('keydown', (e) => {
             if (e.key.toLowerCase() === 's') document.getElementById('save-btn').click();
             if (e.key.toLowerCase() === 'r') resetPosition();
             if (isUserImgLoaded) {
                 const step = 5;
-                if (e.key === 'ArrowLeft') state.x -= step;
-                if (e.key === 'ArrowRight') state.x += step;
-                if (e.key === 'ArrowUp') state.y -= step;
-                if (e.key === 'ArrowDown') state.y += step;
-                draw();
+                if (e.key === 'ArrowLeft') { state.x -= step; syncSliders(); draw(); }
+                if (e.key === 'ArrowRight') { state.x += step; syncSliders(); draw(); }
+                if (e.key === 'ArrowUp') { state.y -= step; syncSliders(); draw(); }
+                if (e.key === 'ArrowDown') { state.y += step; syncSliders(); draw(); }
             }
         });
 
-        // --- 컨트롤러 ---
         canvas.addEventListener('wheel', e => {
             if (!isUserImgLoaded) return;
             e.preventDefault();
@@ -218,17 +209,17 @@
             if (e.touches.length === 2) {
                 const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
                 state.zoom = Math.min(Math.max(initialZoom * (dist / initialPinchDist), 0.1), 5);
-                document.getElementById('zoom').value = state.zoom;
+                syncSliders();
                 const curCX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
                 const curCY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
                 state.x = initialOffsetX + (curCX - initialCenterX) * (canvas.width / rect.width);
                 state.y = initialOffsetY + (curCY - initialCenterY) * (canvas.height / rect.height);
-                document.getElementById('moveX').value = state.x; document.getElementById('moveY').value = state.y;
+                syncSliders();
             } else if (isDragging && e.touches.length === 1) {
                 state.x += (e.touches[0].clientX - lastX) * (canvas.width / rect.width);
                 state.y += (e.touches[0].clientY - lastY) * (canvas.height / rect.height);
                 lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
-                document.getElementById('moveX').value = state.x; document.getElementById('moveY').value = state.y;
+                syncSliders();
             }
             draw();
         }, { passive: false });
@@ -241,7 +232,7 @@
             state.x += (e.clientX - lastX) * (canvas.width / rect.width);
             state.y += (e.clientY - lastY) * (canvas.height / rect.height);
             lastX = e.clientX; lastY = e.clientY;
-            document.getElementById('moveX').value = state.x; document.getElementById('moveY').value = state.y;
+            syncSliders();
             draw();
         };
         window.onmouseup = () => isDragging = false;
@@ -263,25 +254,24 @@
 
         function resetPosition() {
             state.x = 0; state.y = 0; state.zoom = 2.5; state.rotate = 0; state.flip = 1;
-            state.bright = 100; state.contrast = 100;
-            document.getElementById('moveX').value = 0; document.getElementById('moveY').value = 0;
-            document.getElementById('zoom').value = 2.5; document.getElementById('bright').value = 100;
-            document.getElementById('contrast').value = 100;
-            document.getElementById('z-val').innerText = '2.5x';
-            document.getElementById('b-val').innerText = '100%';
-            document.getElementById('c-val').innerText = '100%';
+            syncSliders();
             draw();
+        }
+
+        function syncSliders() {
+            document.getElementById('moveX').value = state.x;
+            document.getElementById('moveY').value = state.y;
+            document.getElementById('zoom').value = state.zoom;
+            document.getElementById('z-val').innerText = state.zoom.toFixed(2) + 'x';
+            document.getElementById('x-val').innerText = Math.round(state.x);
+            document.getElementById('y-val').innerText = Math.round(state.y);
         }
 
         document.querySelectorAll('input[type="range"]').forEach(i => i.addEventListener('input', () => {
             state.zoom = parseFloat(document.getElementById('zoom').value);
-            state.bright = parseInt(document.getElementById('bright').value);
-            state.contrast = parseInt(document.getElementById('contrast').value);
             state.x = parseInt(document.getElementById('moveX').value);
             state.y = parseInt(document.getElementById('moveY').value);
-            document.getElementById('z-val').innerText = state.zoom.toFixed(2) + 'x';
-            document.getElementById('b-val').innerText = state.bright + '%';
-            document.getElementById('c-val').innerText = state.contrast + '%';
+            syncSliders();
             draw();
         }));
 
@@ -298,20 +288,17 @@
             
             if (isUserImgLoaded) {
                 ctx.save();
-                // 캔버스 중앙으로 이동 후 변환
                 ctx.translate(canvas.width / 2 + state.x, canvas.height / 2 + state.y);
                 ctx.scale(state.flip, 1);
                 ctx.rotate(state.rotate * Math.PI / 180);
                 
-                // 필터 적용
-                ctx.filter = `brightness(${state.bright}%) contrast(${state.contrast}%)`;
+                // 보정 필터(ctx.filter)를 제거하여 성능 최적화
                 
                 const imgW = userImg.width * state.zoom;
                 const imgH = userImg.height * state.zoom;
                 ctx.drawImage(userImg, -imgW / 2, -imgH / 2, imgW, imgH);
                 ctx.restore();
             }
-            ctx.filter = "none";
             ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
         }
 
@@ -319,7 +306,7 @@
             if (!isUserImgLoaded) return;
             const format = document.querySelector('input[name="format"]:checked').value;
             const link = document.createElement('a');
-            link.download = `UMASNAP_ULTRA_${Date.now()}.${format}`;
+            link.download = `UMASTARGRAM_${Date.now()}.${format}`;
             link.href = canvas.toDataURL(`image/${format}`, 0.95);
             link.click();
         };
