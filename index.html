@@ -2,69 +2,65 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UMA snap - UMA Snap 프레임</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>UMA snap</title>
     <link rel="icon" href="app_icon.png" type="image/png">
     <style>
-        :root { --primary: #ff4757; --secondary: #3498db; --success: #2ed573; --bg: #f1f2f6; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: #2f3542; }
+        :root {
+            --primary: #ff4757; --secondary: #3498db; --success: #2ed573;
+            --bg: #f1f2f6; --panel-bg: #ffffff; --text-main: #2f3542;
+            --text-sub: #57606f; --border: #eee; --input-bg: #fafafa;
+        }
+
+        body.dark-theme {
+            --bg: #1e272e; --panel-bg: #2f3542; --text-main: #f1f2f6;
+            --text-sub: #ced6e0; --border: #3d464d; --input-bg: #3d464d;
+        }
+
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: var(--text-main); transition: 0.3s; }
         .app-container { max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: 400px 1fr; gap: 25px; }
         
-        .panel { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); height: fit-content; position: sticky; top: 20px; }
-        .panel h3 { margin-top: 0; border-bottom: 2px solid var(--bg); padding-bottom: 15px; color: var(--secondary); }
+        .panel { background: var(--panel-bg); padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); height: fit-content; position: sticky; top: 20px; }
+        .panel h3 { margin-top: 0; border-bottom: 2px solid var(--bg); padding-bottom: 15px; color: var(--secondary); display: flex; justify-content: space-between; align-items: center; }
         
-        #drop-zone { border: 2px dashed var(--secondary); border-radius: 15px; padding: 25px 10px; text-align: center; color: var(--secondary); cursor: pointer; background: #f9fcff; font-weight: 600; margin-bottom: 20px; font-size: 14px; }
-        #drop-zone:hover { background: #eaf6ff; }
+        .theme-toggle { font-size: 11px; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--secondary); background: none; color: var(--secondary); cursor: pointer; font-weight: bold; }
 
-        .control-group { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #f1f2f6; }
-        .label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 12px; color: #57606f; }
+        #drop-zone { border: 2px dashed var(--secondary); border-radius: 15px; padding: 25px 10px; text-align: center; color: var(--secondary); cursor: pointer; background: var(--input-bg); font-weight: 600; margin-bottom: 20px; font-size: 14px; }
+
+        .control-group { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
+        .label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 12px; color: var(--text-main); }
 
         input[type="range"] { width: 100%; cursor: pointer; margin-top: 5px; }
 
         .frame-list { 
-            display: grid; 
-            grid-template-columns: repeat(4, 1fr); 
-            gap: 10px; 
-            max-height: 350px; 
-            overflow-y: auto; 
-            padding: 10px; 
-            background: #fafafa;
-            border: 1px solid #eee;
-            border-radius: 12px;
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; 
+            max-height: 350px; overflow-y: auto; padding: 10px; 
+            background: var(--input-bg); border: 1px solid var(--border); border-radius: 12px;
         }
         .frame-list::-webkit-scrollbar { width: 6px; }
         .frame-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
 
-        .frame-thumb { width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; object-fit: contain; background: white; transition: 0.2s; }
-        .frame-thumb.active { border-color: var(--primary); transform: scale(1.05); box-shadow: 0 4px 10px rgba(255, 71, 87, 0.2); }
+        .frame-thumb { width: 100%; aspect-ratio: 1/1; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; object-fit: contain; background: white; transition: 0.2s; }
+        .frame-thumb.active { border-color: var(--primary); transform: scale(1.05); }
 
-        .preview-section { background: white; padding: 25px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; }
-        
-        /* 터치 시 화면 스크롤 방지를 위해 touch-action 설정 */
+        .preview-section { background: var(--panel-bg); padding: 25px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; }
         canvas { 
-            max-width: 100%; 
-            max-height: 85vh; 
-            border-radius: 5px; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.25); 
-            background: #fff; 
-            cursor: grab;
-            touch-action: none; 
+            max-width: 100%; max-height: 85vh; border-radius: 5px; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3); background: #fff; 
+            cursor: grab; touch-action: none; 
         }
-        canvas:active { cursor: grabbing; }
 
         #save-btn { background: var(--success); color: white; border: none; padding: 18px; border-radius: 12px; cursor: pointer; width: 100%; font-size: 18px; font-weight: bold; margin-top: 20px; }
         
-        @media (max-width: 1100px) { 
-            .app-container { grid-template-columns: 1fr; } 
-            .panel { position: relative; top: 0; } 
-        }
+        @media (max-width: 1100px) { .app-container { grid-template-columns: 1fr; } .panel { position: relative; top: 0; } }
     </style>
 </head>
-<body>
+<body id="main-body">
 
     <div class="app-container">
         <div class="panel">
-            <h3>✨ UMA Snap </h3>
+            <h3>UMA Snap <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">Grey Mode</button></h3>
+            
             <input type="file" id="file-input" accept="image/*" style="display: none;">
             <div id="drop-zone">사진 클릭/드래그 업로드</div>
 
@@ -84,10 +80,10 @@
             </div>
 
             <div class="control-group">
-                <label class="label">2. 사진 조정 (드래그/터치 지원)</label>
-                <div style="font-size: 11px; color: #999;">Zoom</div>
+                <label class="label">2. 사진 조정 (터치 핀치 줌 지원)</label>
+                <div style="font-size: 11px; color: var(--text-sub);">Zoom (슬라이더 또는 핀치)</div>
                 <input type="range" id="zoom" min="0.1" max="5" step="0.01" value="1">
-                <div style="font-size: 11px; color: #999; margin-top: 10px;">X / Y 이동 (슬라이더)</div>
+                <div style="font-size: 11px; color: var(--text-sub); margin-top: 10px;">X / Y 이동</div>
                 <input type="range" id="moveX" min="-2000" max="2000" value="0">
                 <input type="range" id="moveY" min="-2000" max="2000" value="0">
             </div>
@@ -100,7 +96,7 @@
                     <label><input type="radio" name="format" value="png"> PNG</label>
                 </div>
                 <input type="range" id="quality" min="50" max="100" step="5" value="95">
-                <div id="q-label" style="font-size: 11px; color: #aaa;">저장 품질: 95%</div>
+                <div id="q-label" style="font-size: 11px; color: var(--text-sub);">품질: 95%</div>
             </div>
             
             <button id="save-btn">이미지 저장하기</button>
@@ -108,9 +104,8 @@
 
         <div class="preview-section">
             <canvas id="main-canvas"></canvas>
-            <div id="no-img-msg" style="color: #aaa; font-size: 14px; text-align: center; margin-top: 20px;">
-                사진을 업로드하여 편집을 시작하세요.<br>
-                (PC 마우스 / 모바일 터치 드래그 모두 지원)
+            <div id="no-img-msg" style="color: var(--text-sub); font-size: 13px; text-align: center; margin-top: 20px;">
+                두 손가락으로 벌려 확대하고 오므려 축소할 수 있습니다.
             </div>
         </div>
     </div>
@@ -126,18 +121,79 @@
         let isUserImgLoaded = false;
         
         let state = {
-            ratio: 0.75, 
-            zoom: 1,
-            x: 0,
-            y: 0,
+            ratio: 0.75, zoom: 1, x: 0, y: 0,
             frameUrl: '250605_umasnap_frame_sw.png',
             quality: 0.95
         };
 
-        let isDragging = false;
-        let lastX = 0;
-        let lastY = 0;
+        // --- 테마 전환 ---
+        function toggleTheme() {
+            const body = document.getElementById('main-body');
+            const btn = document.getElementById('theme-btn');
+            body.classList.toggle('dark-theme');
+            btn.innerText = body.classList.contains('dark-theme') ? "White Mode" : "Grey Mode";
+        }
 
+        // --- [핵심] 터치 및 드래그 로직 보강 ---
+        let isDragging = false;
+        let lastX = 0; let lastY = 0;
+        let initialPinchDist = 0;
+        let initialZoom = 1;
+
+        function getDist(t1, t2) {
+            return Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+        }
+
+        // 마우스 시작
+        canvas.onmousedown = (e) => { if (!isUserImgLoaded) return; isDragging = true; lastX = e.clientX; lastY = e.clientY; };
+        
+        // 터치 시작 (핀치 줌 감지 시작)
+        canvas.addEventListener('touchstart', (e) => {
+            if (!isUserImgLoaded) return;
+            if (e.touches.length === 1) {
+                isDragging = true;
+                lastX = e.touches[0].clientX;
+                lastY = e.touches[0].clientY;
+            } else if (e.touches.length === 2) {
+                isDragging = false; // 핀치 시 이동 중단
+                initialPinchDist = getDist(e.touches[0], e.touches[1]);
+                initialZoom = state.zoom;
+            }
+        }, {passive: false});
+
+        // 이동 및 줌 처리
+        function handleMove(x, y, isTouch = false, e = null) {
+            if (isTouch && e && e.touches.length === 2) {
+                // 핀치 줌 실행
+                const currentDist = getDist(e.touches[0], e.touches[1]);
+                const zoomFactor = currentDist / initialPinchDist;
+                state.zoom = Math.min(Math.max(initialZoom * zoomFactor, 0.1), 5);
+                document.getElementById('zoom').value = state.zoom;
+            } else if (isDragging) {
+                // 드래그 이동
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                state.x += (x - lastX) * scaleX;
+                state.y += (y - lastY) * scaleY;
+                document.getElementById('moveX').value = state.x;
+                document.getElementById('moveY').value = state.y;
+                lastX = x; lastY = y;
+            }
+            draw();
+        }
+
+        window.onmousemove = (e) => handleMove(e.clientX, e.clientY);
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            handleMove(touch.clientX, touch.clientY, true, e);
+        }, {passive: false});
+
+        window.onmouseup = () => { isDragging = false; };
+        canvas.addEventListener('touchend', () => { isDragging = false; initialPinchDist = 0; });
+
+        // --- 기타 기능 ---
         function loadFrame(url) {
             frameImg = new Image();
             frameImg.crossOrigin = "Anonymous";
@@ -146,15 +202,10 @@
         }
         loadFrame(state.frameUrl);
 
-        // --- 업로드 로직 ---
         dropZone.onclick = () => fileInput.click();
         dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('dragover'); };
         dropZone.ondragleave = () => dropZone.classList.remove('dragover');
-        dropZone.ondrop = (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('dragover');
-            handleFile(e.dataTransfer.files[0]);
-        };
+        dropZone.ondrop = (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); handleFile(e.dataTransfer.files[0]); };
         fileInput.onchange = (e) => handleFile(e.target.files[0]);
 
         function handleFile(file) {
@@ -174,63 +225,13 @@
             reader.readAsDataURL(file);
         }
 
-        // --- 드래그 & 터치 통합 로직 ---
-        function startDrag(x, y) {
-            if (!isUserImgLoaded) return;
-            isDragging = true;
-            lastX = x;
-            lastY = y;
-        }
-
-        function moveDrag(x, y) {
-            if (!isDragging) return;
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-
-            const deltaX = (x - lastX) * scaleX;
-            const deltaY = (y - lastY) * scaleY;
-
-            state.x += deltaX;
-            state.y += deltaY;
-
-            document.getElementById('moveX').value = state.x;
-            document.getElementById('moveY').value = state.y;
-
-            lastX = x;
-            lastY = y;
-            draw();
-        }
-
-        function endDrag() { isDragging = false; }
-
-        // 마우스 이벤트
-        canvas.onmousedown = (e) => startDrag(e.clientX, e.clientY);
-        window.onmousemove = (e) => moveDrag(e.clientX, e.clientY);
-        window.onmouseup = endDrag;
-
-        // [핵심] 터치 이벤트 (모바일 지원)
-        canvas.addEventListener('touchstart', (e) => {
-            const touch = e.touches[0];
-            startDrag(touch.clientX, touch.clientY);
-        }, { passive: false });
-
-        canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault(); // 스크롤 방지
-            const touch = e.touches[0];
-            moveDrag(touch.clientX, touch.clientY);
-        }, { passive: false });
-
-        canvas.addEventListener('touchend', endDrag);
-
-        // --- 기타 컨트롤 ---
         document.querySelectorAll('input[type="range"]').forEach(input => {
             input.addEventListener('input', () => {
                 state.zoom = parseFloat(document.getElementById('zoom').value);
                 state.x = parseInt(document.getElementById('moveX').value);
                 state.y = parseInt(document.getElementById('moveY').value);
                 state.quality = parseInt(document.getElementById('quality').value) / 100;
-                document.getElementById('q-label').innerText = `저장 품질: ${document.getElementById('quality').value}%`;
+                document.getElementById('q-label').innerText = `품질: ${document.getElementById('quality').value}%`;
                 draw();
             });
         });
@@ -243,16 +244,13 @@
         }
 
         function draw() {
-            canvas.width = 1080;
-            canvas.height = 1440;
+            canvas.width = 1080; canvas.height = 1440;
             ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             if (isUserImgLoaded) {
                 const imgW = userImg.width * state.zoom;
                 const imgH = userImg.height * state.zoom;
-                const startX = (canvas.width - imgW) / 2 + state.x;
-                const startY = (canvas.height - imgH) / 2 + state.y;
-                ctx.drawImage(userImg, startX, startY, imgW, imgH);
+                ctx.drawImage(userImg, (canvas.width - imgW) / 2 + state.x, (canvas.height - imgH) / 2 + state.y, imgW, imgH);
             }
             ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
         }
@@ -262,12 +260,8 @@
             const format = document.querySelector('input[name="format"]:checked').value;
             const link = document.createElement('a');
             link.download = `umasnap_pro_${Date.now()}.${format}`;
-            try {
-                link.href = canvas.toDataURL(`image/${format}`, state.quality);
-                link.click();
-            } catch (e) {
-                alert("보안 에러가 발생했습니다. GitHub 주소로 접속해주세요.");
-            }
+            link.href = canvas.toDataURL(`image/${format}`, state.quality);
+            link.click();
         };
     </script>
 </body>
