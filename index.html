@@ -3,132 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>umasnap v3.2 - 프레임 완벽 복구 버전</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <title>umasnap v4.0 - 통합 실시간 편집기</title>
     <style>
         :root { --primary: #ff4757; --secondary: #3498db; --success: #2ed573; --bg: #f1f2f6; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: #2f3542; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: #2f3542; }
         .app-container { max-width: 1300px; margin: 0 auto; display: grid; grid-template-columns: 380px 1fr; gap: 25px; }
         
+        /* 컨트롤 패널 */
         .panel { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); height: fit-content; position: sticky; top: 20px; }
         .panel h3 { margin-top: 0; border-bottom: 2px solid var(--bg); padding-bottom: 15px; color: var(--secondary); }
         
-        #drop-zone { border: 2px dashed var(--secondary); border-radius: 15px; padding: 40px 15px; text-align: center; color: var(--secondary); cursor: pointer; background: #f9fcff; font-weight: 600; margin-bottom: 15px; }
+        #drop-zone { border: 2px dashed var(--secondary); border-radius: 15px; padding: 30px 10px; text-align: center; color: var(--secondary); cursor: pointer; background: #f9fcff; font-weight: 600; margin-bottom: 20px; }
         #drop-zone.dragover { background: var(--secondary); color: white; }
 
-        .control-group { margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #f1f2f6; }
-        .label { display: block; font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+        .control-group { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #f1f2f6; }
+        .label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 10px; color: #57606f; }
 
-        .ratio-btns { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-        .ratio-btn { padding: 12px; border: 2px solid #eee; background: white; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold; }
+        /* 비율 버튼 */
+        .ratio-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .ratio-btn { padding: 10px; border: 1px solid #eee; background: white; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: bold; }
         .ratio-btn.active { background: var(--secondary); color: white; border-color: var(--secondary); }
 
-        #apply-crop-btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; display: none; margin-top: 10px; }
-        
+        /* 슬라이더 */
+        input[type="range"] { width: 100%; cursor: pointer; margin-top: 5px; }
+
+        /* 프레임 선택 */
         .frame-list { display: flex; gap: 10px; overflow-x: auto; padding: 5px 0; }
-        .frame-thumb { width: 65px; height: 65px; border: 2px solid #ddd; border-radius: 10px; cursor: pointer; object-fit: contain; flex-shrink: 0; }
+        .frame-thumb { width: 60px; height: 60px; border: 2px solid #ddd; border-radius: 10px; cursor: pointer; object-fit: contain; flex-shrink: 0; }
         .frame-thumb.active { border-color: var(--primary); }
 
-        .preview-section { background: white; padding: 25px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; min-height: 60vh; }
-        .crop-wrapper { width: 100%; max-height: 70vh; display: none; border-radius: 10px; overflow: hidden; }
-        #image-to-crop { max-width: 100%; }
-        #final-canvas { max-width: 100%; max-height: 75vh; box-shadow: 0 15px 45px rgba(0,0,0,0.2); display: none; border-radius: 5px; }
+        /* 미리보기 영역 */
+        .preview-section { background: white; padding: 25px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; }
+        canvas { max-width: 100%; max-height: 80vh; border-radius: 5px; box-shadow: 0 15px 45px rgba(0,0,0,0.2); background: #fff; }
 
-        #save-btn { background: var(--success); color: white; border: none; padding: 18px; border-radius: 12px; cursor: pointer; width: 100%; font-size: 18px; font-weight: bold; margin-top: 20px; display: none; }
+        #save-btn { background: var(--success); color: white; border: none; padding: 18px; border-radius: 12px; cursor: pointer; width: 100%; font-size: 18px; font-weight: bold; margin-top: 20px; transition: 0.3s; }
+        #save-btn:hover { background: #26af61; transform: translateY(-2px); }
         
-        @media (max-width: 1000px) { .app-container { grid-template-columns: 1fr; } }
+        @media (max-width: 1000px) { .app-container { grid-template-columns: 1fr; } .panel { position: relative; top: 0; } }
     </style>
 </head>
 <body>
 
     <div class="app-container">
         <div class="panel">
-            <h3>✨ umasnap v3.2</h3>
+            <h3>✨ umasnap v4.0</h3>
             
             <input type="file" id="file-input" accept="image/*" style="display: none;">
-            <div id="drop-zone">사진 클릭/드래그 업로드</div>
+            <div id="drop-zone">사진을 클릭하거나 드래그하여 업로드</div>
 
-            <div class="control-group" id="step1-ui" style="display: none;">
-                <label class="label">1. 사진 비율 선택 (고정)</label>
-                <div class="ratio-btns" id="ratio-btns">
-                    <button class="ratio-btn active" data-ratio="0.8">4:5 (인스타)</button>
-                    <button class="ratio-btn" data-ratio="1">1:1 (정사각형)</button>
-                    <button class="ratio-btn" data-ratio="0.75">3:4 (폴라로이드)</button>
-                    <button class="ratio-btn" data-ratio="1.77">16:9 (와이드)</button>
+            <div class="control-group">
+                <label class="label">1. 프레임 비율 고정</label>
+                <div class="ratio-btns">
+                    <button class="ratio-btn" onclick="setRatio(this, 1)">1:1</button>
+                    <button class="ratio-btn active" onclick="setRatio(this, 0.8)">4:5</button>
+                    <button class="ratio-btn" onclick="setRatio(this, 0.75)">3:4</button>
+                    <button class="ratio-btn" onclick="setRatio(this, 1.77)">16:9</button>
+                    <button class="ratio-btn" onclick="setRatio(this, 0.56)">9:16</button>
                 </div>
-                <button id="apply-crop-btn">✂️ 사진 자르기 완료</button>
             </div>
 
-            <div id="step2-ui" style="display: none;">
-                <div class="control-group">
-                    <label class="label">2. 프레임 선택</label>
-                    <div class="frame-list">
-                        <img src="frame1.png" class="frame-thumb active" onclick="changeFrame(this, 'frame1.png')">
-                        <img src="frame2.png" class="frame-thumb" onclick="changeFrame(this, 'frame2.png')">
-                        <img src="frame3.png" class="frame-thumb" onclick="changeFrame(this, 'frame3.png')">
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label class="label">3. 내보내기 설정</label>
-                    <div style="margin-bottom: 10px; font-size: 14px;">
-                        <label><input type="radio" name="format" value="webp" checked> WebP</label>
-                        <label><input type="radio" name="format" value="jpeg"> JPG</label>
-                        <label><input type="radio" name="format" value="png"> PNG</label>
-                    </div>
-                    <input type="range" id="quality" min="50" max="100" value="95">
-                    <div id="q-label" style="font-size: 12px; color: #777;">품질: 95%</div>
-                </div>
-                
-                <button id="save-btn">이미지 저장하기</button>
+            <div class="control-group">
+                <label class="label">2. 사진 위치 및 크기 조정</label>
+                <div style="font-size: 11px; color: #999;">확대 / 축소</div>
+                <input type="range" id="zoom" min="0.1" max="5" step="0.01" value="1">
+                <div style="font-size: 11px; color: #999; margin-top: 10px;">좌우 이동 (X)</div>
+                <input type="range" id="moveX" min="-2000" max="2000" value="0">
+                <div style="font-size: 11px; color: #999; margin-top: 10px;">상하 이동 (Y)</div>
+                <input type="range" id="moveY" min="-2000" max="2000" value="0">
             </div>
-            <button onclick="location.reload()" style="width:100%; border:none; background:none; color:#aaa; cursor:pointer; font-size:11px; margin-top:20px;">초기화</button>
+
+            <div class="control-group">
+                <label class="label">3. 프레임 디자인</label>
+                <div class="frame-list">
+                    <img src="frame1.png" class="frame-thumb active" onclick="changeFrame(this, 'frame1.png')">
+                    <img src="frame2.png" class="frame-thumb" onclick="changeFrame(this, 'frame2.png')">
+                    <img src="frame3.png" class="frame-thumb" onclick="changeFrame(this, 'frame3.png')">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label class="label">4. 저장 설정</label>
+                <div style="margin-bottom: 8px; font-size: 13px;">
+                    <label><input type="radio" name="format" value="webp" checked> WebP</label>
+                    <label><input type="radio" name="format" value="jpeg"> JPG</label>
+                    <label><input type="radio" name="format" value="png"> PNG</label>
+                </div>
+                <input type="range" id="quality" min="50" max="100" value="95">
+                <div id="q-label" style="font-size: 11px; color: #aaa;">품질: 95%</div>
+            </div>
+            
+            <button id="save-btn">이미지 저장하기</button>
         </div>
 
         <div class="preview-section">
-            <div id="msg" style="margin-top: 150px; color: #aaa;">사진을 업로드해주세요.</div>
-            <div class="crop-wrapper" id="crop-wrapper">
-                <img id="image-to-crop">
-            </div>
-            <canvas id="final-canvas"></canvas>
+            <canvas id="main-canvas"></canvas>
+            <div id="no-img-msg" style="color: #aaa;">사진을 업로드하면 편집이 시작됩니다.</div>
         </div>
     </div>
 
     <script>
+        const canvas = document.getElementById('main-canvas');
+        const ctx = canvas.getContext('2d');
         const fileInput = document.getElementById('file-input');
         const dropZone = document.getElementById('drop-zone');
-        const imageToCrop = document.getElementById('image-to-crop');
-        const finalCanvas = document.getElementById('final-canvas');
-        const ctx = finalCanvas.getContext('2d');
         
-        let cropper = null;
-        let croppedCanvas = null;
         let frameImg = new Image();
+        let userImg = new Image();
+        let isUserImgLoaded = false;
         
+        // 상태 통합 관리
         let state = {
-            ratio: 0.8,
+            ratio: 0.8,    // 가로/세로 비율 (4:5 기본)
+            zoom: 1,
+            x: 0,
+            y: 0,
             frameUrl: 'frame1.png',
             quality: 0.95
         };
 
-        // --- 프레임 로드 함수 (가장 안전한 방식) ---
-        function setFrame(url) {
-            state.frameUrl = url;
+        // --- 보안 및 프레임 로드 ---
+        function loadFrame(url) {
             frameImg = new Image();
-            // 같은 저장소(GitHub)라면 crossOrigin이 없어야 로컬 테스트 시 에러가 덜 납니다.
-            // 하지만 저장하기(toDataURL) 에러가 나면 아래 주석을 해제하세요.
-            // frameImg.crossOrigin = "Anonymous"; 
-            frameImg.onload = () => {
-                console.log("프레임 로드 완료:", url);
-                draw();
-            };
-            frameImg.onerror = () => alert("프레임 파일(" + url + ")을 찾을 수 없습니다. GitHub에 올리셨나요?");
-            frameImg.src = url;
+            frameImg.crossOrigin = "Anonymous"; // 보안 패치
+            frameImg.onload = draw;
+            frameImg.src = url + "?t=" + new Date().getTime(); // 캐시 방지
         }
-
-        // 초기 프레임 설정
-        setFrame(state.frameUrl);
+        loadFrame(state.frameUrl);
 
         // --- 업로드 처리 ---
         dropZone.onclick = () => fileInput.click();
@@ -145,96 +145,88 @@
             if (!file) return;
             const reader = new FileReader();
             reader.onload = (e) => {
-                imageToCrop.src = e.target.result;
-                document.getElementById('msg').style.display = 'none';
-                document.getElementById('crop-wrapper').style.display = 'block';
-                document.getElementById('step1-ui').style.display = 'block';
-                document.getElementById('apply-crop-btn').style.display = 'block';
-                dropZone.style.display = 'none';
-
-                if (cropper) cropper.destroy();
-                cropper = new Cropper(imageToCrop, {
-                    aspectRatio: state.ratio,
-                    viewMode: 1,
-                    autoCropArea: 1
-                });
+                userImg = new Image();
+                userImg.onload = () => {
+                    isUserImgLoaded = true;
+                    document.getElementById('no-img-msg').style.display = 'none';
+                    // 초기 줌 자동 설정 (캔버스에 꽉 차게)
+                    const baseWidth = 1200;
+                    const baseHeight = baseWidth / state.ratio;
+                    state.zoom = Math.max(baseWidth / userImg.width, baseHeight / userImg.height);
+                    document.getElementById('zoom').value = state.zoom;
+                    draw();
+                };
+                userImg.src = e.target.result;
             };
             reader.readAsDataURL(file);
         }
 
-        // --- 비율 변경 ---
-        document.getElementById('ratio-btns').onclick = (e) => {
-            const btn = e.target.closest('.ratio-btn');
-            if (!btn || !cropper) return;
-            document.querySelectorAll('.ratio-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            state.ratio = parseFloat(btn.dataset.ratio);
-            cropper.setAspectRatio(state.ratio);
-        };
+        // --- 실시간 슬라이더 컨트롤 ---
+        document.querySelectorAll('input[type="range"]').forEach(input => {
+            input.addEventListener('input', () => {
+                state.zoom = parseFloat(document.getElementById('zoom').value);
+                state.x = parseInt(document.getElementById('moveX').value);
+                state.y = parseInt(document.getElementById('moveY').value);
+                state.quality = parseInt(document.getElementById('quality').value) / 100;
+                document.getElementById('q-label').innerText = `품질: ${document.getElementById('quality').value}%`;
+                draw();
+            });
+        });
 
-        // --- 자르기 완료 버튼 ---
-        document.getElementById('apply-crop-btn').onclick = () => {
-            if (!cropper) return;
-            // 고해상도 자르기 데이터 생성
-            croppedCanvas = cropper.getCroppedCanvas({ maxWidth: 2000, maxHeight: 2000 });
-            
-            cropper.destroy();
-            cropper = null;
-            
-            document.getElementById('crop-wrapper').style.display = 'none';
-            document.getElementById('step1-ui').style.display = 'none';
-            document.getElementById('step2-ui').style.display = 'block';
-            finalCanvas.style.display = 'block';
-            document.getElementById('save-btn').style.display = 'block';
-            
+        function setRatio(el, r) {
+            document.querySelectorAll('.ratio-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            state.ratio = r;
             draw();
-        };
+        }
 
         function changeFrame(el, url) {
             document.querySelectorAll('.frame-thumb').forEach(t => t.classList.remove('active'));
             el.classList.add('active');
-            setFrame(url);
+            state.frameUrl = url;
+            loadFrame(url);
         }
 
-        // --- 최종 합성 (비율 고정 핵심 로직) ---
+        // --- [핵심] 프레임 비율 고정 그리기 로직 ---
         function draw() {
-            if (!croppedCanvas || !frameImg.complete) return;
+            // 1. 캔버스의 크기를 선택한 비율로 "강제 고정" (프레임 찌그러짐 방지 핵심)
+            const baseWidth = 1200; 
+            canvas.width = baseWidth;
+            canvas.height = baseWidth / state.ratio;
 
-            // 1. 캔버스 크기를 선택한 비율에 맞춰 강제로 고정 (찌그러짐 방지)
-            const baseWidth = 1200;
-            finalCanvas.width = baseWidth;
-            finalCanvas.height = baseWidth / state.ratio;
-
-            // 2. 배경 지우기/채우기
-            ctx.clearRect(0, 0, finalCanvas.width, finalCanvas.height);
+            // 배경 채우기
             ctx.fillStyle = "#ffffff";
-            ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 3. 사진 그리기 (캔버스 크기에 맞춰 꽉 채움)
-            ctx.drawImage(croppedCanvas, 0, 0, finalCanvas.width, finalCanvas.height);
+            if (isUserImgLoaded) {
+                // 2. 사진 그리기 (레이어 1: 아래)
+                const imgW = userImg.width * state.zoom;
+                const imgH = userImg.height * state.zoom;
+                
+                // 사진 중앙 배치 + 이동값 적용
+                const startX = (canvas.width - imgW) / 2 + state.x;
+                const startY = (canvas.height - imgH) / 2 + state.y;
+                
+                ctx.drawImage(userImg, startX, startY, imgW, imgH);
+            }
 
-            // 4. 프레임 그리기 (사진 위에 캔버스 크기에 맞춰 꽉 채움)
-            ctx.drawImage(frameImg, 0, 0, finalCanvas.width, finalCanvas.height);
+            // 3. 프레임 그리기 (레이어 2: 위)
+            // 프레임 PNG를 캔버스 전체 크기(고정 비율)에 맞춰서 100% 꽉 차게 그립니다.
+            // 이렇게 하면 프레임 디자인이 캔버스의 모양을 따라가므로 절대 변형되지 않습니다.
+            ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
         }
 
-        // 품질 및 저장
-        document.getElementById('quality').oninput = (e) => {
-            state.quality = e.target.value / 100;
-            document.getElementById('q-label').innerText = `품질: ${e.target.value}%`;
-        };
-
+        // --- 저장하기 ---
         document.getElementById('save-btn').onclick = () => {
+            if (!isUserImgLoaded) return alert("사진을 먼저 업로드해주세요.");
             const format = document.querySelector('input[name="format"]:checked').value;
             const link = document.createElement('a');
-            link.download = `umasnap_result_${Date.now()}.${format}`;
-            
+            link.download = `umasnap_${Date.now()}.${format}`;
             try {
-                // 95% 품질로 데이터 추출
-                link.href = finalCanvas.toDataURL(`image/${format}`, state.quality);
+                link.href = canvas.toDataURL(`image/${format}`, state.quality);
                 link.click();
             } catch (e) {
-                alert("보안 에러가 발생했습니다. GitHub에 파일을 올린 뒤 주소로 접속해서 테스트해 주세요!");
-                console.error(e);
+                alert("보안 에러가 발생했습니다. GitHub 주소로 접속해서 다시 시도해주세요!");
             }
         };
     </script>
