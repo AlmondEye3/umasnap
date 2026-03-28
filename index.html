@@ -3,105 +3,239 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>umasnap - 커스텀 프레임 합성기</title>
+    <title>umasnap v3.2 - 프레임 완벽 복구 버전</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; text-align: center; background-color: #f8f9fa; margin: 0; padding: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; }
+        :root { --primary: #ff4757; --secondary: #3498db; --success: #2ed573; --bg: #f1f2f6; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: #2f3542; }
+        .app-container { max-width: 1300px; margin: 0 auto; display: grid; grid-template-columns: 380px 1fr; gap: 25px; }
         
-        /* 프레임 선택 영역 */
-        .frame-selector { display: flex; gap: 15px; justify-content: center; margin-bottom: 30px; overflow-x: auto; padding: 10px; }
-        .frame-item { width: 100px; height: 100px; border: 3px solid #ddd; border-radius: 10px; cursor: pointer; transition: 0.3s; background-color: white; object-fit: contain; }
-        .frame-item.active { border-color: #ff4757; transform: scale(1.1); }
-        .frame-item:hover { border-color: #ffa502; }
+        .panel { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); height: fit-content; position: sticky; top: 20px; }
+        .panel h3 { margin-top: 0; border-bottom: 2px solid var(--bg); padding-bottom: 15px; color: var(--secondary); }
+        
+        #drop-zone { border: 2px dashed var(--secondary); border-radius: 15px; padding: 40px 15px; text-align: center; color: var(--secondary); cursor: pointer; background: #f9fcff; font-weight: 600; margin-bottom: 15px; }
+        #drop-zone.dragover { background: var(--secondary); color: white; }
 
-        /* 업로드 및 결과 영역 */
-        #drop-zone { border: 2px dashed #3498db; border-radius: 15px; padding: 40px; background: white; cursor: pointer; margin-bottom: 20px; }
-        canvas { max-width: 100%; height: auto; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: none; margin: 20px auto; }
+        .control-group { margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #f1f2f6; }
+        .label { display: block; font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+
+        .ratio-btns { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .ratio-btn { padding: 12px; border: 2px solid #eee; background: white; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold; }
+        .ratio-btn.active { background: var(--secondary); color: white; border-color: var(--secondary); }
+
+        #apply-crop-btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; display: none; margin-top: 10px; }
         
-        .btn { padding: 15px 30px; font-size: 18px; font-weight: bold; color: white; border: none; border-radius: 10px; cursor: pointer; display: none; margin: 10px auto; }
-        #download-btn { background-color: #2ecc71; }
+        .frame-list { display: flex; gap: 10px; overflow-x: auto; padding: 5px 0; }
+        .frame-thumb { width: 65px; height: 65px; border: 2px solid #ddd; border-radius: 10px; cursor: pointer; object-fit: contain; flex-shrink: 0; }
+        .frame-thumb.active { border-color: var(--primary); }
+
+        .preview-section { background: white; padding: 25px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; min-height: 60vh; }
+        .crop-wrapper { width: 100%; max-height: 70vh; display: none; border-radius: 10px; overflow: hidden; }
+        #image-to-crop { max-width: 100%; }
+        #final-canvas { max-width: 100%; max-height: 75vh; box-shadow: 0 15px 45px rgba(0,0,0,0.2); display: none; border-radius: 5px; }
+
+        #save-btn { background: var(--success); color: white; border: none; padding: 18px; border-radius: 12px; cursor: pointer; width: 100%; font-size: 18px; font-weight: bold; margin-top: 20px; display: none; }
+        
+        @media (max-width: 1000px) { .app-container { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>umasnap 프레임 합성</h1>
-        <p>1. 적용할 프레임을 선택하세요. | 2. 사진을 업로드하세요.</p>
+    <div class="app-container">
+        <div class="panel">
+            <h3>✨ umasnap v3.2</h3>
+            
+            <input type="file" id="file-input" accept="image/*" style="display: none;">
+            <div id="drop-zone">사진 클릭/드래그 업로드</div>
 
-        <div class="frame-selector" id="frame-list">
-            <img src="frame1.png" class="frame-item active" onclick="selectFrame(this, 'frame1.png')">
-            <img src="frame2.png" class="frame-item" onclick="selectFrame(this, 'frame2.png')">
-            <img src="frame3.png" class="frame-item" onclick="selectFrame(this, 'frame3.png')">
+            <div class="control-group" id="step1-ui" style="display: none;">
+                <label class="label">1. 사진 비율 선택 (고정)</label>
+                <div class="ratio-btns" id="ratio-btns">
+                    <button class="ratio-btn active" data-ratio="0.8">4:5 (인스타)</button>
+                    <button class="ratio-btn" data-ratio="1">1:1 (정사각형)</button>
+                    <button class="ratio-btn" data-ratio="0.75">3:4 (폴라로이드)</button>
+                    <button class="ratio-btn" data-ratio="1.77">16:9 (와이드)</button>
+                </div>
+                <button id="apply-crop-btn">✂️ 사진 자르기 완료</button>
             </div>
 
-        <input type="file" id="file-input" accept="image/*" style="display: none;">
-        <div id="drop-zone">이곳을 클릭하거나 사진을 드래그하여 업로드</div>
+            <div id="step2-ui" style="display: none;">
+                <div class="control-group">
+                    <label class="label">2. 프레임 선택</label>
+                    <div class="frame-list">
+                        <img src="frame1.png" class="frame-thumb active" onclick="changeFrame(this, 'frame1.png')">
+                        <img src="frame2.png" class="frame-thumb" onclick="changeFrame(this, 'frame2.png')">
+                        <img src="frame3.png" class="frame-thumb" onclick="changeFrame(this, 'frame3.png')">
+                    </div>
+                </div>
 
-        <canvas id="main-canvas"></canvas>
-        <button id="download-btn" class="btn">합성된 사진 저장하기</button>
+                <div class="control-group">
+                    <label class="label">3. 내보내기 설정</label>
+                    <div style="margin-bottom: 10px; font-size: 14px;">
+                        <label><input type="radio" name="format" value="webp" checked> WebP</label>
+                        <label><input type="radio" name="format" value="jpeg"> JPG</label>
+                        <label><input type="radio" name="format" value="png"> PNG</label>
+                    </div>
+                    <input type="range" id="quality" min="50" max="100" value="95">
+                    <div id="q-label" style="font-size: 12px; color: #777;">품질: 95%</div>
+                </div>
+                
+                <button id="save-btn">이미지 저장하기</button>
+            </div>
+            <button onclick="location.reload()" style="width:100%; border:none; background:none; color:#aaa; cursor:pointer; font-size:11px; margin-top:20px;">초기화</button>
+        </div>
+
+        <div class="preview-section">
+            <div id="msg" style="margin-top: 150px; color: #aaa;">사진을 업로드해주세요.</div>
+            <div class="crop-wrapper" id="crop-wrapper">
+                <img id="image-to-crop">
+            </div>
+            <canvas id="final-canvas"></canvas>
+        </div>
     </div>
 
     <script>
-        const canvas = document.getElementById('main-canvas');
-        const ctx = canvas.getContext('2d');
         const fileInput = document.getElementById('file-input');
         const dropZone = document.getElementById('drop-zone');
-        const downloadBtn = document.getElementById('download-btn');
-
-        let selectedFrameUrl = 'frame1.png'; // 기본 선택 프레임
-        let userImage = null;
-
-        // 프레임 선택 함수
-        function selectFrame(el, url) {
-            document.querySelectorAll('.frame-item').forEach(img => img.classList.remove('active'));
-            el.classList.add('active');
-            selectedFrameUrl = url;
-            if (userImage) compose(); // 사진이 이미 있으면 즉시 재합성
-        }
-
-        // 사진 업로드 처리
-        dropZone.onclick = () => fileInput.click();
-        fileInput.onchange = (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    userImage = new Image();
-                    userImage.onload = compose;
-                    userImage.src = event.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
+        const imageToCrop = document.getElementById('image-to-crop');
+        const finalCanvas = document.getElementById('final-canvas');
+        const ctx = finalCanvas.getContext('2d');
+        
+        let cropper = null;
+        let croppedCanvas = null;
+        let frameImg = new Image();
+        
+        let state = {
+            ratio: 0.8,
+            frameUrl: 'frame1.png',
+            quality: 0.95
         };
 
-        // 핵심 합성 로직
-        function compose() {
-            if (!userImage) return;
-
-            const frameImg = new Image();
-            frameImg.onload = function() {
-                // 1. 캔버스 크기를 사용자 사진 크기에 맞춤
-                canvas.width = userImage.width;
-                canvas.height = userImage.height;
-
-                // 2. 사용자 사진 그리기 (바닥)
-                ctx.drawImage(userImage, 0, 0);
-
-                // 3. 프레임을 사진 크기에 맞춰서 덮어쓰기 (위에)
-                ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
-
-                canvas.style.display = 'block';
-                downloadBtn.style.display = 'block';
+        // --- 프레임 로드 함수 (가장 안전한 방식) ---
+        function setFrame(url) {
+            state.frameUrl = url;
+            frameImg = new Image();
+            // 같은 저장소(GitHub)라면 crossOrigin이 없어야 로컬 테스트 시 에러가 덜 납니다.
+            // 하지만 저장하기(toDataURL) 에러가 나면 아래 주석을 해제하세요.
+            // frameImg.crossOrigin = "Anonymous"; 
+            frameImg.onload = () => {
+                console.log("프레임 로드 완료:", url);
+                draw();
             };
-            frameImg.src = selectedFrameUrl;
+            frameImg.onerror = () => alert("프레임 파일(" + url + ")을 찾을 수 없습니다. GitHub에 올리셨나요?");
+            frameImg.src = url;
         }
 
-        // 다운로드
-        downloadBtn.onclick = () => {
+        // 초기 프레임 설정
+        setFrame(state.frameUrl);
+
+        // --- 업로드 처리 ---
+        dropZone.onclick = () => fileInput.click();
+        dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('dragover'); };
+        dropZone.ondragleave = () => dropZone.classList.remove('dragover');
+        dropZone.ondrop = (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            handleFile(e.dataTransfer.files[0]);
+        };
+        fileInput.onchange = (e) => handleFile(e.target.files[0]);
+
+        function handleFile(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imageToCrop.src = e.target.result;
+                document.getElementById('msg').style.display = 'none';
+                document.getElementById('crop-wrapper').style.display = 'block';
+                document.getElementById('step1-ui').style.display = 'block';
+                document.getElementById('apply-crop-btn').style.display = 'block';
+                dropZone.style.display = 'none';
+
+                if (cropper) cropper.destroy();
+                cropper = new Cropper(imageToCrop, {
+                    aspectRatio: state.ratio,
+                    viewMode: 1,
+                    autoCropArea: 1
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // --- 비율 변경 ---
+        document.getElementById('ratio-btns').onclick = (e) => {
+            const btn = e.target.closest('.ratio-btn');
+            if (!btn || !cropper) return;
+            document.querySelectorAll('.ratio-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            state.ratio = parseFloat(btn.dataset.ratio);
+            cropper.setAspectRatio(state.ratio);
+        };
+
+        // --- 자르기 완료 버튼 ---
+        document.getElementById('apply-crop-btn').onclick = () => {
+            if (!cropper) return;
+            // 고해상도 자르기 데이터 생성
+            croppedCanvas = cropper.getCroppedCanvas({ maxWidth: 2000, maxHeight: 2000 });
+            
+            cropper.destroy();
+            cropper = null;
+            
+            document.getElementById('crop-wrapper').style.display = 'none';
+            document.getElementById('step1-ui').style.display = 'none';
+            document.getElementById('step2-ui').style.display = 'block';
+            finalCanvas.style.display = 'block';
+            document.getElementById('save-btn').style.display = 'block';
+            
+            draw();
+        };
+
+        function changeFrame(el, url) {
+            document.querySelectorAll('.frame-thumb').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            setFrame(url);
+        }
+
+        // --- 최종 합성 (비율 고정 핵심 로직) ---
+        function draw() {
+            if (!croppedCanvas || !frameImg.complete) return;
+
+            // 1. 캔버스 크기를 선택한 비율에 맞춰 강제로 고정 (찌그러짐 방지)
+            const baseWidth = 1200;
+            finalCanvas.width = baseWidth;
+            finalCanvas.height = baseWidth / state.ratio;
+
+            // 2. 배경 지우기/채우기
+            ctx.clearRect(0, 0, finalCanvas.width, finalCanvas.height);
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+
+            // 3. 사진 그리기 (캔버스 크기에 맞춰 꽉 채움)
+            ctx.drawImage(croppedCanvas, 0, 0, finalCanvas.width, finalCanvas.height);
+
+            // 4. 프레임 그리기 (사진 위에 캔버스 크기에 맞춰 꽉 채움)
+            ctx.drawImage(frameImg, 0, 0, finalCanvas.width, finalCanvas.height);
+        }
+
+        // 품질 및 저장
+        document.getElementById('quality').oninput = (e) => {
+            state.quality = e.target.value / 100;
+            document.getElementById('q-label').innerText = `품질: ${e.target.value}%`;
+        };
+
+        document.getElementById('save-btn').onclick = () => {
+            const format = document.querySelector('input[name="format"]:checked').value;
             const link = document.createElement('a');
-            link.download = 'umasnap_result.png';
-            link.href = canvas.toDataURL('image/png');
-            link.click();
+            link.download = `umasnap_result_${Date.now()}.${format}`;
+            
+            try {
+                // 95% 품질로 데이터 추출
+                link.href = finalCanvas.toDataURL(`image/${format}`, state.quality);
+                link.click();
+            } catch (e) {
+                alert("보안 에러가 발생했습니다. GitHub에 파일을 올린 뒤 주소로 접속해서 테스트해 주세요!");
+                console.error(e);
+            }
         };
     </script>
 </body>
