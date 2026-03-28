@@ -31,7 +31,6 @@
         
         .tool-group { display: flex; gap: 8px; margin-bottom: 15px; }
         .tool-btn { flex: 1; background: var(--card-bg); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 600; transition: 0.2s; }
-        .tool-btn:hover { background: var(--border); }
 
         .control-item { margin-bottom: 15px; }
         .label-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim); margin-bottom: 5px; }
@@ -45,7 +44,7 @@
         
         #save-btn { background: linear-gradient(135deg, var(--primary), #eb3b5a); color: white; border: none; padding: 16px; border-radius: 50px; font-size: 15px; font-weight: 800; cursor: pointer; width: 100%; margin-top: 15px; box-shadow: 0 10px 25px rgba(255, 71, 87, 0.3); }
 
-        .chip-group { display: flex; gap: 6px; }
+        .chip-group { display: flex; gap: 6px; margin-bottom: 10px; }
         .chip { flex: 1; text-align: center; padding: 8px; border-radius: 10px; background: var(--card-bg); font-size: 11px; cursor: pointer; border: 1px solid var(--border); }
         .chip.active { background: var(--accent); border-color: var(--accent); font-weight: 800; }
 
@@ -86,29 +85,31 @@
                 <input type="range" id="zoom" min="0.1" max="5" step="0.01" value="2.5">
             </div>
             <div class="control-item">
-                <div class="label-row"><span>상하 이동 (Move Y)</span><span id="y-val">0</span></div>
-                <input type="range" id="moveY" min="-2000" max="2000" step="1" value="0">
+                <div class="label-row"><span>Y Position</span><span id="y-val">0</span></div>
+                <input type="range" id="moveY" min="-2000" max="2000" value="0">
             </div>
             <div class="control-item">
-                <div class="label-row"><span>좌우 이동 (Move X)</span><span id="x-val">0</span></div>
-                <input type="range" id="moveX" min="-2000" max="2000" step="1" value="0">
+                <div class="label-row"><span>X Position</span><span id="x-val">0</span></div>
+                <input type="range" id="moveX" min="-2000" max="2000" value="0">
             </div>
             <button onclick="resetPosition()" style="background:none; border:none; color:var(--accent); font-size:11px; cursor:pointer; width:100%; text-align:right;">설정 초기화 (R)</button>
 
-            <div class="section-header">Export</div>
+            <div class="section-header">Export Settings</div>
             <div class="chip-group">
                 <label class="chip active"><input type="radio" name="format" value="webp" checked style="display:none"> WebP</label>
                 <label class="chip"><input type="radio" name="format" value="jpeg" style="display:none"> JPEG</label>
                 <label class="chip"><input type="radio" name="format" value="png" style="display:none"> PNG</label>
+            </div>
+            <div class="control-item">
+                <div class="label-row"><span>저장 품질 (Quality)</span><span id="q-label">95%</span></div>
+                <input type="range" id="quality" min="50" max="100" step="5" value="95">
             </div>
             <button id="save-btn">EXPORT STARGRAM (S)</button>
         </aside>
 
         <main class="main-stage" id="main-stage">
             <canvas id="main-canvas"></canvas>
-            <div style="font-size: 11px; color: var(--text-dim); margin-top: 15px; letter-spacing: 0.5px;">
-                Wheel to Zoom | Double-click to Reset | Drag & Drop Anywhere
-            </div>
+            <div style="font-size: 11px; color: var(--text-dim); margin-top: 15px;">Wheel to Zoom | Double-click to Reset</div>
         </main>
     </div>
 
@@ -123,7 +124,6 @@
         let userImg = new Image();
         let isUserImgLoaded = false;
         
-        // 상태값에서 보정 필터(bright, contrast) 제거
         let state = { 
             ratio: 0.75, zoom: 2.5, x: 0, y: 0, 
             rotate: 0, flip: 1,
@@ -162,21 +162,13 @@
         window.addEventListener('keydown', (e) => {
             if (e.key.toLowerCase() === 's') document.getElementById('save-btn').click();
             if (e.key.toLowerCase() === 'r') resetPosition();
-            if (isUserImgLoaded) {
-                const step = 5;
-                if (e.key === 'ArrowLeft') { state.x -= step; syncSliders(); draw(); }
-                if (e.key === 'ArrowRight') { state.x += step; syncSliders(); draw(); }
-                if (e.key === 'ArrowUp') { state.y -= step; syncSliders(); draw(); }
-                if (e.key === 'ArrowDown') { state.y += step; syncSliders(); draw(); }
-            }
         });
 
         canvas.addEventListener('wheel', e => {
             if (!isUserImgLoaded) return;
             e.preventDefault();
             state.zoom = Math.min(Math.max(state.zoom + (e.deltaY > 0 ? -0.1 : 0.1), 0.1), 5);
-            document.getElementById('zoom').value = state.zoom;
-            document.getElementById('z-val').innerText = state.zoom.toFixed(2) + 'x';
+            syncSliders();
             draw();
         }, { passive: false });
 
@@ -209,7 +201,6 @@
             if (e.touches.length === 2) {
                 const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
                 state.zoom = Math.min(Math.max(initialZoom * (dist / initialPinchDist), 0.1), 5);
-                syncSliders();
                 const curCX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
                 const curCY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
                 state.x = initialOffsetX + (curCX - initialCenterX) * (canvas.width / rect.width);
@@ -265,12 +256,14 @@
             document.getElementById('z-val').innerText = state.zoom.toFixed(2) + 'x';
             document.getElementById('x-val').innerText = Math.round(state.x);
             document.getElementById('y-val').innerText = Math.round(state.y);
+            document.getElementById('q-label').innerText = Math.round(state.quality * 100) + '%';
         }
 
-        document.querySelectorAll('input[type="range"]').forEach(i => i.addEventListener('input', () => {
+        document.querySelectorAll('input[type="range"]').forEach(i => i.addEventListener('input', (e) => {
             state.zoom = parseFloat(document.getElementById('zoom').value);
             state.x = parseInt(document.getElementById('moveX').value);
             state.y = parseInt(document.getElementById('moveY').value);
+            if (e.target.id === 'quality') state.quality = parseInt(e.target.value) / 100;
             syncSliders();
             draw();
         }));
@@ -291,9 +284,6 @@
                 ctx.translate(canvas.width / 2 + state.x, canvas.height / 2 + state.y);
                 ctx.scale(state.flip, 1);
                 ctx.rotate(state.rotate * Math.PI / 180);
-                
-                // 보정 필터(ctx.filter)를 제거하여 성능 최적화
-                
                 const imgW = userImg.width * state.zoom;
                 const imgH = userImg.height * state.zoom;
                 ctx.drawImage(userImg, -imgW / 2, -imgH / 2, imgW, imgH);
@@ -307,7 +297,8 @@
             const format = document.querySelector('input[name="format"]:checked').value;
             const link = document.createElement('a');
             link.download = `UMASTARGRAM_${Date.now()}.${format}`;
-            link.href = canvas.toDataURL(`image/${format}`, 0.95);
+            // 사용자 설정 품질 적용
+            link.href = canvas.toDataURL(`image/${format}`, state.quality);
             link.click();
         };
     </script>
