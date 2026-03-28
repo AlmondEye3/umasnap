@@ -3,226 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhotoFrame Pro - 유즈루캠 스타일 (최종 수정본)</title>
-    <script src="https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.umd.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <title>umasnap - 커스텀 프레임 합성기</title>
     <style>
-        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; text-align: center; background-color: #f0f2f5; color: #333; margin: 0; padding: 20px; }
-        .app-container { max-width: 1200px; margin: 0 auto; display: flex; gap: 20px; flex-wrap: wrap; }
+        body { font-family: 'Segoe UI', sans-serif; text-align: center; background-color: #f8f9fa; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
         
-        /* 설정 패널 */
-        .controls { flex: 1; min-width: 320px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: left; height: fit-content; }
-        .controls h3 { margin-top: 0; color: #3498db; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; }
-        .control-group { margin-bottom: 18px; }
-        .control-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: #555; }
-        .control-group input[type="range"] { width: 100%; cursor: pointer; }
-        .control-group input[type="color"] { border: 1px solid #ddd; padding: 2px; width: 50px; height: 35px; cursor: pointer; border-radius: 4px; }
-        .control-group input[type="file"] { font-size: 12px; }
+        /* 프레임 선택 영역 */
+        .frame-selector { display: flex; gap: 15px; justify-content: center; margin-bottom: 30px; overflow-x: auto; padding: 10px; }
+        .frame-item { width: 100px; height: 100px; border: 3px solid #ddd; border-radius: 10px; cursor: pointer; transition: 0.3s; background-color: white; object-fit: contain; }
+        .frame-item.active { border-color: #ff4757; transform: scale(1.1); }
+        .frame-item:hover { border-color: #ffa502; }
+
+        /* 업로드 및 결과 영역 */
+        #drop-zone { border: 2px dashed #3498db; border-radius: 15px; padding: 40px; background: white; cursor: pointer; margin-bottom: 20px; }
+        canvas { max-width: 100%; height: auto; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: none; margin: 20px auto; }
         
-        /* 업로드 & 다운로드 버튼 */
-        #drop-zone { border: 2px dashed #3498db; border-radius: 15px; height: 120px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 15px; color: #3498db; margin-bottom: 20px; cursor: pointer; transition: 0.3s; background: #f9fcff; font-weight: 500; }
-        #drop-zone:hover { background-color: #eaf6ff; transform: translateY(-2px); }
-        .btn { display: inline-block; padding: 12px 20px; font-size: 16px; font-weight: bold; color: white; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s; width: 100%; margin-top: 10px;}
-        #download-btn { background-color: #27ae60; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.2); }
-        #download-btn:hover { background-color: #2ecc71; }
-        
-        /* 미리보기 영역 */
-        .preview-area { flex: 2; min-width: 350px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); min-height: 400px; display: flex; flex-direction: column; align-items: center; }
-        canvas { max-width: 100%; height: auto; border-radius: 5px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); margin-top: 10px; display: none;}
-        .empty-msg { color: #aaa; margin-top: 150px; }
+        .btn { padding: 15px 30px; font-size: 18px; font-weight: bold; color: white; border: none; border-radius: 10px; cursor: pointer; display: none; margin: 10px auto; }
+        #download-btn { background-color: #2ecc71; }
     </style>
 </head>
 <body>
 
-    <h1>PhotoFrame <span style="color:#3498db;">Pro</span></h1>
-    <p style="color:#666; margin-bottom: 30px;">모든 처리는 본인 컴퓨터(Client-side)에서 이루어집니다.</p>
+    <div class="container">
+        <h1>umasnap 프레임 합성</h1>
+        <p>1. 적용할 프레임을 선택하세요. | 2. 사진을 업로드하세요.</p>
 
-    <div class="app-container">
-        <div class="controls">
-            <h3>환경 설정</h3>
-            
-            <input type="file" id="file-input" accept="image/*" style="display: none;">
-            <div id="drop-zone">이곳에 사진을 드래그하거나 클릭하여 업로드</div>
-            
-            <div class="control-group">
-                <label>배경(프레임) 색상</label>
-                <input type="color" id="frame-color" value="#ffffff">
+        <div class="frame-selector" id="frame-list">
+            <img src="frame1.png" class="frame-item active" onclick="selectFrame(this, 'frame1.png')">
+            <img src="frame2.png" class="frame-item" onclick="selectFrame(this, 'frame2.png')">
+            <img src="frame3.png" class="frame-item" onclick="selectFrame(this, 'frame3.png')">
             </div>
-            
-            <div class="control-group">
-                <label>상하좌우 여백 (%)</label>
-                <input type="range" id="frame-thickness" min="0" max="15" value="4">
-            </div>
-            
-            <div class="control-group">
-                <label>하단 정보창 높이 (%)</label>
-                <input type="range" id="bottom-padding" min="5" max="40" value="15">
-            </div>
-            
-            <div class="control-group">
-                <label>글자 크기 (%)</label>
-                <input type="range" id="font-size" min="5" max="60" value="25">
-            </div>
-            
-            <div class="control-group" style="border-top: 1px solid #eee; padding-top: 15px;">
-                <label>커스텀 로고 (PNG 추천)</label>
-                <input type="file" id="logo-input" accept="image/*">
-            </div>
-            
-            <button id="download-btn" class="btn" style="display: none;">결과물 다운로드 (.JPG)</button>
-        </div>
 
-        <div class="preview-area" id="preview-container">
-            <h3 id="preview-title">실시간 미리보기</h3>
-            <div class="empty-msg" id="empty-msg">사진을 업로드하면 여기에 표시됩니다.</div>
-            <canvas id="canvas-preview"></canvas>
-        </div>
+        <input type="file" id="file-input" accept="image/*" style="display: none;">
+        <div id="drop-zone">이곳을 클릭하거나 사진을 드래그하여 업로드</div>
+
+        <canvas id="main-canvas"></canvas>
+        <button id="download-btn" class="btn">합성된 사진 저장하기</button>
     </div>
 
     <script>
-        const fileInput = document.getElementById('file-input');
-        const logoInput = document.getElementById('logo-input');
-        const dropZone = document.getElementById('drop-zone');
-        const canvas = document.getElementById('canvas-preview');
+        const canvas = document.getElementById('main-canvas');
         const ctx = canvas.getContext('2d');
+        const fileInput = document.getElementById('file-input');
+        const dropZone = document.getElementById('drop-zone');
         const downloadBtn = document.getElementById('download-btn');
-        const emptyMsg = document.getElementById('empty-msg');
-        
-        let currentImage = null;
-        let currentExif = {};
-        let logoImage = null;
 
-        // 이벤트 리스너
-        dropZone.addEventListener('click', () => fileInput.click());
-        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = '#2ecc71'; });
-        dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = '#3498db'; });
-        dropZone.addEventListener('drop', handleFileDrop);
-        fileInput.addEventListener('change', handleFileSelect);
-        logoInput.addEventListener('change', handleLogoSelect);
-        
-        document.querySelectorAll('input[type="range"], input[type="color"]').forEach(input => {
-            input.addEventListener('input', updateCanvas);
-        });
+        let selectedFrameUrl = 'frame1.png'; // 기본 선택 프레임
+        let userImage = null;
 
-        function handleLogoSelect(e) {
+        // 프레임 선택 함수
+        function selectFrame(el, url) {
+            document.querySelectorAll('.frame-item').forEach(img => img.classList.remove('active'));
+            el.classList.add('active');
+            selectedFrameUrl = url;
+            if (userImage) compose(); // 사진이 이미 있으면 즉시 재합성
+        }
+
+        // 사진 업로드 처리
+        dropZone.onclick = () => fileInput.click();
+        fileInput.onchange = (e) => {
             const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                logoImage = new Image();
-                logoImage.onload = updateCanvas;
-                logoImage.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function handleFileSelect(e) { const file = e.target.files[0]; if (file) processFile(file); }
-        function handleFileDrop(e) { e.preventDefault(); const file = e.dataTransfer.files[0]; if (file) processFile(file); }
-
-        async function processFile(file) {
-            try {
-                // EXIF 추출 (Full 버전 사용 및 에러 방지 처리)
-                currentExif = await exifr.parse(file) || {};
-                console.log("EXIF 분석 완료:", currentExif);
-            } catch (error) {
-                console.warn("EXIF 정보가 없는 파일입니다:", error);
-                currentExif = {}; 
-            }
-            
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                currentImage = new Image();
-                currentImage.onload = function() {
-                    emptyMsg.style.display = 'none';
-                    canvas.style.display = 'block';
-                    updateCanvas();
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    userImage = new Image();
+                    userImage.onload = compose;
+                    userImage.src = event.target.result;
                 };
-                currentImage.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
-            
-            downloadBtn.style.display = 'block';
-            downloadBtn.onclick = () => downloadImage(file.name);
-        }
-
-        function updateCanvas() {
-            if (!currentImage) return;
-
-            const thickness = document.getElementById('frame-thickness').value;
-            const padding = document.getElementById('bottom-padding').value;
-            const fontScale = document.getElementById('font-size').value;
-            const frameColor = document.getElementById('frame-color').value;
-
-            const w = currentImage.width;
-            const h = currentImage.height;
-            
-            const sideMargin = Math.round(w * (thickness / 100));
-            const bottomMargin = Math.round(h * (padding / 100));
-            
-            canvas.width = w + (sideMargin * 2);
-            canvas.height = h + sideMargin + bottomMargin;
-
-            // 1. 배경
-            ctx.fillStyle = frameColor;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // 2. 사진
-            ctx.drawImage(currentImage, sideMargin, sideMargin);
-
-            // 3. EXIF 텍스트 조합 (정보가 없을 경우 빈칸 처리)
-            const model = currentExif.Model || "";
-            const focal = currentExif.FocalLengthIn35mmFormat ? `${currentExif.FocalLengthIn35mmFormat}mm` : (currentExif.FocalLength ? `${currentExif.FocalLength}mm` : "");
-            const f_stop = currentExif.FNumber ? `f/${currentExif.FNumber}` : "";
-            const shutter = currentExif.ExposureTime ? `${formatExposureTime(currentExif.ExposureTime)}s` : "";
-            const iso = currentExif.ISOSpeedRatings ? `ISO ${currentExif.ISOSpeedRatings}` : "";
-
-            // 유효한 정보만 걸러서 합치기
-            const infoArray = [model, focal, f_stop, shutter, iso].filter(item => item !== "");
-            const exifText = infoArray.join("  |  ");
-
-            const fontSize = Math.round(bottomMargin * (fontScale / 100));
-            ctx.font = `300 ${fontSize}px 'Segoe UI', system-ui, sans-serif`; 
-            ctx.fillStyle = getContrastColor(frameColor);
-            ctx.textAlign = 'center';
-            
-            const textX = canvas.width / 2;
-            const textY = h + sideMargin + (bottomMargin * 0.55); 
-            
-            ctx.fillText(exifText, textX, textY);
-            
-            // 4. 로고 (텍스트 왼쪽에 배치)
-            if (logoImage && exifText !== "") {
-                const logoHeight = Math.round(fontSize * 1.2);
-                const logoWidth = (logoImage.width / logoImage.height) * logoHeight;
-                const textWidth = ctx.measureText(exifText).width;
-                
-                const logoX = textX - (textWidth / 2) - logoWidth - (fontSize * 0.8);
-                const logoY = textY - (fontSize * 0.85);
-                
-                ctx.drawImage(logoImage, logoX, logoY, logoWidth, logoHeight);
+                reader.readAsDataURL(file);
             }
+        };
+
+        // 핵심 합성 로직
+        function compose() {
+            if (!userImage) return;
+
+            const frameImg = new Image();
+            frameImg.onload = function() {
+                // 1. 캔버스 크기를 사용자 사진 크기에 맞춤
+                canvas.width = userImage.width;
+                canvas.height = userImage.height;
+
+                // 2. 사용자 사진 그리기 (바닥)
+                ctx.drawImage(userImage, 0, 0);
+
+                // 3. 프레임을 사진 크기에 맞춰서 덮어쓰기 (위에)
+                ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
+
+                canvas.style.display = 'block';
+                downloadBtn.style.display = 'block';
+            };
+            frameImg.src = selectedFrameUrl;
         }
 
-        function formatExposureTime(s) {
-            if (!s) return "";
-            if (s >= 1) return s.toFixed(1);
-            return `1/${Math.round(1/s)}`;
-        }
-
-        function getContrastColor(hex) {
-            const r = parseInt(hex.substr(1, 2), 16);
-            const g = parseInt(hex.substr(3, 2), 16);
-            const b = parseInt(hex.substr(5, 2), 16);
-            const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
-            return (yiq >= 128) ? '#111111' : '#ffffff';
-        }
-
-        function downloadImage(name) {
+        // 다운로드
+        downloadBtn.onclick = () => {
             const link = document.createElement('a');
-            link.download = `PhotoFrame_${name.split('.')[0]}.jpg`;
-            link.href = canvas.toDataURL('image/jpeg', 0.95);
+            link.download = 'umasnap_result.png';
+            link.href = canvas.toDataURL('image/png');
             link.click();
-        }
+        };
     </script>
 </body>
 </html>
