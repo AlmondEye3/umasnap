@@ -15,24 +15,33 @@
         }
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-deep); margin: 0; color: var(--text-main); display: flex; justify-content: center; height: 100vh; overflow: hidden; }
         .app-container { width: 100%; max-width: 1400px; display: grid; grid-template-columns: 420px 1fr; height: 100vh; }
-        .panel { background: var(--bg-panel); backdrop-filter: blur(20px); padding: 30px; border-right: 1px solid var(--border); overflow-y: auto; box-sizing: border-box; }
+        .panel { background: var(--bg-panel); backdrop-filter: blur(20px); padding: 30px; border-right: 1px solid var(--border); overflow-y: auto; box-sizing: border-box; z-index: 10; }
         .panel h1 { font-size: 24px; font-weight: 800; margin-bottom: 30px; letter-spacing: -1px; background: linear-gradient(45deg, var(--primary), #ff6b81); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        #drop-zone { background: var(--card-bg); border: 1px dashed var(--border); border-radius: 16px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; margin-bottom: 30px; }
+        #drop-zone.drag-over { background: rgba(83, 82, 237, 0.2); border-color: var(--accent); transform: scale(1.02); }
+
         .section-header { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
         .section-header::after { content: ""; flex: 1; height: 1px; background: var(--border); }
-        #drop-zone { background: var(--card-bg); border: 1px dashed var(--border); border-radius: 16px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; margin-bottom: 30px; }
-        #drop-zone:hover { background: rgba(83, 82, 237, 0.1); }
-        .frame-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: var(--card-bg); padding: 12px; border-radius: 16px; }
+        
+        /* 프레임 격자: 10개가 예쁘게 보이도록 조정 */
+        .frame-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: var(--card-bg); padding: 12px; border-radius: 16px; max-height: 400px; overflow-y: auto; }
         .frame-thumb { width: 100%; aspect-ratio: 1/1; border-radius: 8px; cursor: pointer; background: #fff; border: 2px solid transparent; transition: 0.2s; opacity: 0.6; }
         .frame-thumb.active { border-color: var(--primary); opacity: 1; transform: scale(1.05); }
-        .main-stage { display: flex; flex-direction: column; align-items: center; justify-content: center; background-image: radial-gradient(circle at center, #1e1e1e 0%, #0f0f0f 100%); flex: 1; padding: 40px; }
+        
+        .main-stage { display: flex; flex-direction: column; align-items: center; justify-content: center; background-image: radial-gradient(circle at center, #1e1e1e 0%, #0f0f0f 100%); flex: 1; padding: 40px; position: relative; transition: 0.3s; }
+        .main-stage.drag-over { background-color: rgba(83, 82, 237, 0.05); }
+
         canvas { max-width: 95%; max-height: 85vh; border-radius: 4px; box-shadow: 0 30px 60px rgba(0,0,0,0.5); cursor: grab; touch-action: none; }
         #save-btn { background: linear-gradient(135deg, var(--primary), #eb3b5a); color: white; border: none; padding: 18px; border-radius: 50px; font-size: 16px; font-weight: 800; cursor: pointer; width: 100%; margin-top: 25px; box-shadow: 0 10px 30px rgba(255, 71, 87, 0.3); }
+        
         .chip-group { display: flex; gap: 8px; margin-bottom: 15px; }
         .chip { padding: 8px 16px; border-radius: 20px; background: var(--card-bg); font-size: 11px; cursor: pointer; border: 1px solid var(--border); }
         .chip.active { background: var(--accent); border-color: var(--accent); }
         input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; margin: 10px 0; }
         input[type="range"]::-webkit-slider-runnable-track { height: 4px; background: var(--border); border-radius: 2px; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%; background: var(--primary); margin-top: -7px; box-shadow: 0 0 10px rgba(255,71,87,0.4); }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%; background: var(--primary); margin-top: -7px; }
+        
         @media (max-width: 1100px) { .app-container { grid-template-columns: 1fr; overflow-y: auto; } .panel { height: auto; position: static; } .main-stage { min-height: 60vh; } }
     </style>
 </head>
@@ -58,14 +67,12 @@
             </div>
 
             <div style="margin-top:25px" class="section-header">Adjustments</div>
-            <div style="font-size:11px; color:var(--text-dim)">Zoom (Pinch & Scroll Support)</div>
             <input type="range" id="zoom" min="0.1" max="5" step="0.01" value="2.5">
-            <div style="font-size:11px; color:var(--text-dim); margin-top:10px">Position (Multi-touch Support)</div>
             <input type="range" id="moveX" min="-2000" max="2000" value="0">
             <input type="range" id="moveY" min="-2000" max="2000" value="0">
-            <button onclick="resetPosition()" style="background:none; border:none; color:var(--accent); font-size:11px; cursor:pointer; padding-top:10px;">Reset View</button>
+            <button onclick="resetPosition()" style="background:none; border:none; color:var(--accent); font-size:11px; cursor:pointer;">Reset View</button>
 
-            <div style="margin-top:25px" class="section-header">Export</div>
+            <div style="margin-top:25px" class="section-header">Export Settings</div>
             <div class="chip-group">
                 <label class="chip active"><input type="radio" name="format" value="webp" checked style="display:none"> WebP</label>
                 <label class="chip"><input type="radio" name="format" value="jpeg" style="display:none"> JPEG</label>
@@ -75,9 +82,9 @@
             <button id="save-btn">EXPORT SNAP</button>
         </aside>
 
-        <main class="main-stage">
+        <main class="main-stage" id="main-stage">
             <canvas id="main-canvas"></canvas>
-            <div style="font-size: 12px; color: var(--text-dim); margin-top: 15px;">Pinch to Zoom & Drag to Move simultaneously</div>
+            <div style="font-size: 11px; color: var(--text-dim); margin-top: 15px;">Drag & Drop Image | Wheel to Zoom | Dbl-click to Fit</div>
         </main>
     </div>
 
@@ -85,87 +92,91 @@
         const canvas = document.getElementById('main-canvas');
         const ctx = canvas.getContext('2d');
         const fileInput = document.getElementById('file-input');
+        const dropZone = document.getElementById('drop-zone');
+        const mainStage = document.getElementById('main-stage');
+
         let frameImg = new Image();
         let userImg = new Image();
         let isUserImgLoaded = false;
         
-        let state = { ratio: 0.75, zoom: 2.5, x: 0, y: 0, frameUrl: '250605_umasnap_frame_sw.png', quality: 0.95 };
+        // 초기 프레임을 리스트의 첫 번째 이미지로 설정
+        let state = { ratio: 0.75, zoom: 2.5, x: 0, y: 0, frameUrl: '250605_umasnap_frame.png', quality: 0.95 };
 
-        // [PC] 마우스 휠 줌
-        canvas.addEventListener('wheel', (e) => {
+        // --- 드래그 앤 드롭 ---
+        ['dragenter', 'dragover'].forEach(n => {
+            dropZone.addEventListener(n, e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+            mainStage.addEventListener(n, e => { e.preventDefault(); mainStage.classList.add('drag-over'); });
+        });
+        ['dragleave', 'drop'].forEach(n => {
+            dropZone.addEventListener(n, e => { e.preventDefault(); dropZone.classList.remove('drag-over'); });
+            mainStage.addEventListener(n, e => { e.preventDefault(); mainStage.classList.remove('drag-over'); });
+        });
+        [dropZone, mainStage].forEach(t => {
+            t.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f && f.type.startsWith('image/')) handleFile(f); });
+        });
+
+        fileInput.onchange = e => handleFile(e.target.files[0]);
+
+        function handleFile(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = ev => {
+                userImg = new Image();
+                userImg.onload = () => { isUserImgLoaded = true; draw(); };
+                userImg.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // --- 컨트롤러 ---
+        canvas.addEventListener('wheel', e => {
             if (!isUserImgLoaded) return;
             e.preventDefault();
-            const delta = e.deltaY > 0 ? -0.1 : 0.1;
-            state.zoom = Math.min(Math.max(state.zoom + delta, 0.1), 5);
+            state.zoom = Math.min(Math.max(state.zoom + (e.deltaY > 0 ? -0.1 : 0.1), 0.1), 5);
             document.getElementById('zoom').value = state.zoom;
             draw();
         }, { passive: false });
 
-        canvas.ondblclick = () => { if (!isUserImgLoaded) return; resetPosition(); draw(); };
+        canvas.ondblclick = () => { if (isUserImgLoaded) resetPosition(); draw(); };
 
-        // [모바일/PC 공통] 드래그 및 멀티터치 상태 변수
         let isDragging = false;
         let lastX = 0; let lastY = 0;
-        let initialPinchDist = 0;
-        let initialZoom = 1;
-        let initialCenterX = 0;
-        let initialCenterY = 0;
-        let initialOffsetX = 0;
-        let initialOffsetY = 0;
+        let initialPinchDist = 0; let initialZoom = 1;
+        let initialCenterX = 0; let initialCenterY = 0;
+        let initialOffsetX = 0; let initialOffsetY = 0;
 
-        // [핵심] 터치 시작
-        canvas.addEventListener('touchstart', (e) => {
+        canvas.addEventListener('touchstart', e => {
             if (!isUserImgLoaded) return;
             if (e.touches.length === 1) {
-                isDragging = true;
-                lastX = e.touches[0].clientX;
-                lastY = e.touches[0].clientY;
+                isDragging = true; lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
             } else if (e.touches.length === 2) {
                 isDragging = false;
-                // 두 손가락 사이의 초기 거리 계산
                 initialPinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
                 initialZoom = state.zoom;
-                // 두 손가락의 중심점 계산
                 initialCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
                 initialCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-                // 현재 사진 위치 저장
-                initialOffsetX = state.x;
-                initialOffsetY = state.y;
+                initialOffsetX = state.x; initialOffsetY = state.y;
             }
         }, { passive: false });
 
-        // [핵심] 터치 이동 (확대와 이동을 동시에!)
-        canvas.addEventListener('touchmove', (e) => {
+        canvas.addEventListener('touchmove', e => {
             if (!isUserImgLoaded) return;
             e.preventDefault();
-            
             const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-
             if (e.touches.length === 2) {
-                // 1. 줌(Zoom) 업데이트
-                const currentDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-                state.zoom = Math.min(Math.max(initialZoom * (currentDist / initialPinchDist), 0.1), 5);
+                const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                state.zoom = Math.min(Math.max(initialZoom * (dist / initialPinchDist), 0.1), 5);
                 document.getElementById('zoom').value = state.zoom;
-
-                // 2. 중심점 이동(Pan) 업데이트
-                const currentCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-                const currentCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-                
-                state.x = initialOffsetX + (currentCenterX - initialCenterX) * scaleX;
-                state.y = initialOffsetY + (currentCenterY - initialCenterY) * scaleY;
-                
+                const curCX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                const curCY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                state.x = initialOffsetX + (curCX - initialCenterX) * (canvas.width / rect.width);
+                state.y = initialOffsetY + (curCY - initialCenterY) * (canvas.height / rect.height);
                 document.getElementById('moveX').value = state.x;
                 document.getElementById('moveY').value = state.y;
-
             } else if (isDragging && e.touches.length === 1) {
-                // 단일 터치 이동
-                const x = e.touches[0].clientX;
-                const y = e.touches[0].clientY;
-                state.x += (x - lastX) * scaleX;
-                state.y += (y - lastY) * scaleY;
-                lastX = x; lastY = y;
+                state.x += (e.touches[0].clientX - lastX) * (canvas.width / rect.width);
+                state.y += (e.touches[0].clientY - lastY) * (canvas.height / rect.height);
+                lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
                 document.getElementById('moveX').value = state.x;
                 document.getElementById('moveY').value = state.y;
             }
@@ -174,9 +185,8 @@
 
         canvas.addEventListener('touchend', () => { isDragging = false; initialPinchDist = 0; });
 
-        // [PC] 마우스 드래그 로직
-        canvas.onmousedown = (e) => { if (!isUserImgLoaded) return; isDragging = true; lastX = e.clientX; lastY = e.clientY; };
-        window.onmousemove = (e) => {
+        canvas.onmousedown = e => { if (isUserImgLoaded) { isDragging = true; lastX = e.clientX; lastY = e.clientY; } };
+        window.onmousemove = e => {
             if (!isDragging) return;
             const rect = canvas.getBoundingClientRect();
             state.x += (e.clientX - lastX) * (canvas.width / rect.width);
@@ -188,7 +198,6 @@
         };
         window.onmouseup = () => isDragging = false;
 
-        // 기타 기본 함수들
         function loadFrame(url) {
             frameImg = new Image();
             frameImg.crossOrigin = "Anonymous";
@@ -196,16 +205,6 @@
             frameImg.src = url + "?t=" + new Date().getTime();
         }
         loadFrame(state.frameUrl);
-
-        fileInput.onchange = (e) => {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                userImg = new Image();
-                userImg.onload = () => { isUserImgLoaded = true; draw(); };
-                userImg.src = ev.target.result;
-            };
-            reader.readAsDataURL(e.target.files[0]);
-        };
 
         function changeFrame(el, url) {
             document.querySelectorAll('.frame-thumb').forEach(t => t.classList.remove('active'));
@@ -228,11 +227,9 @@
             draw();
         }));
 
-        document.querySelectorAll('.chip').forEach(chip => {
-            chip.onclick = function() {
-                document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-                this.classList.add('active');
-            };
+        document.querySelectorAll('.chip').forEach(c => c.onclick = function() {
+            document.querySelectorAll('.chip').forEach(chip => chip.classList.remove('active'));
+            this.classList.add('active');
         });
 
         function draw() {
