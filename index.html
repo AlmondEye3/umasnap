@@ -9,48 +9,61 @@
     <style>
         :root {
             --primary: #ff4757; --accent: #5352ed; --success: #2ed573;
-            --bg-deep: #0f0f0f; --bg-panel: rgba(30, 30, 30, 0.8);
+            --bg-deep: #0f0f0f; --bg-panel: rgba(25, 25, 25, 0.9);
             --text-main: #f1f2f6; --text-dim: #a4b0be; --border: rgba(255, 255, 255, 0.1);
-            --card-bg: rgba(47, 53, 66, 0.5);
+            --card-bg: rgba(45, 52, 54, 0.6);
         }
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-deep); margin: 0; color: var(--text-main); display: flex; justify-content: center; height: 100vh; overflow: hidden; }
         .app-container { width: 100%; max-width: 1400px; display: grid; grid-template-columns: 420px 1fr; height: 100vh; }
-        .panel { background: var(--bg-panel); backdrop-filter: blur(20px); padding: 30px; border-right: 1px solid var(--border); overflow-y: auto; box-sizing: border-box; z-index: 10; }
-        .panel h1 { font-size: 24px; font-weight: 800; margin-bottom: 30px; letter-spacing: -1px; background: linear-gradient(45deg, var(--primary), #ff6b81); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        #drop-zone { background: var(--card-bg); border: 1px dashed var(--border); border-radius: 16px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; margin-bottom: 30px; }
-        #drop-zone.drag-over { background: rgba(83, 82, 237, 0.2); border-color: var(--accent); transform: scale(1.02); }
+        /* 사이드바 패널 */
+        .panel { background: var(--bg-panel); backdrop-filter: blur(30px); padding: 25px; border-right: 1px solid var(--border); overflow-y: auto; box-sizing: border-box; z-index: 10; scrollbar-width: thin; }
+        .panel h1 { font-size: 26px; font-weight: 800; margin-bottom: 25px; letter-spacing: -1.5px; background: linear-gradient(45deg, var(--primary), #eb3b5a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        #drop-zone { background: var(--card-bg); border: 1px dashed var(--border); border-radius: 16px; padding: 15px; text-align: center; cursor: pointer; transition: 0.3s; margin-bottom: 20px; font-size: 13px; font-weight: 600; }
+        #drop-zone.drag-over { background: rgba(83, 82, 237, 0.2); border-color: var(--accent); }
 
-        .section-header { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .section-header { font-size: 10px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; margin: 20px 0 12px 0; display: flex; align-items: center; gap: 8px; }
         .section-header::after { content: ""; flex: 1; height: 1px; background: var(--border); }
         
-        /* 프레임 격자: 10개가 예쁘게 보이도록 조정 */
-        .frame-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: var(--card-bg); padding: 12px; border-radius: 16px; max-height: 400px; overflow-y: auto; }
-        .frame-thumb { width: 100%; aspect-ratio: 1/1; border-radius: 8px; cursor: pointer; background: #fff; border: 2px solid transparent; transition: 0.2s; opacity: 0.6; }
-        .frame-thumb.active { border-color: var(--primary); opacity: 1; transform: scale(1.05); }
+        .frame-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; background: var(--card-bg); padding: 10px; border-radius: 16px; }
+        .frame-thumb { width: 100%; aspect-ratio: 1/1; border-radius: 6px; cursor: pointer; background: #fff; border: 2px solid transparent; transition: 0.2s; opacity: 0.5; filter: grayscale(30%); }
+        .frame-thumb:hover { opacity: 1; filter: grayscale(0%); }
+        .frame-thumb.active { border-color: var(--primary); opacity: 1; filter: grayscale(0%); transform: scale(1.05); box-shadow: 0 0 15px rgba(255, 71, 87, 0.3); }
         
-        .main-stage { display: flex; flex-direction: column; align-items: center; justify-content: center; background-image: radial-gradient(circle at center, #1e1e1e 0%, #0f0f0f 100%); flex: 1; padding: 40px; position: relative; transition: 0.3s; }
-        .main-stage.drag-over { background-color: rgba(83, 82, 237, 0.05); }
+        /* 툴 그룹 (회전, 반전) */
+        .tool-group { display: flex; gap: 8px; margin-bottom: 15px; }
+        .tool-btn { flex: 1; background: var(--card-bg); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 600; transition: 0.2s; }
+        .tool-btn:hover { background: var(--border); }
 
-        canvas { max-width: 95%; max-height: 85vh; border-radius: 4px; box-shadow: 0 30px 60px rgba(0,0,0,0.5); cursor: grab; touch-action: none; }
-        #save-btn { background: linear-gradient(135deg, var(--primary), #eb3b5a); color: white; border: none; padding: 18px; border-radius: 50px; font-size: 16px; font-weight: 800; cursor: pointer; width: 100%; margin-top: 25px; box-shadow: 0 10px 30px rgba(255, 71, 87, 0.3); }
+        .control-item { margin-bottom: 15px; }
+        .label-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim); margin-bottom: 5px; }
+
+        input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type="range"]::-webkit-slider-runnable-track { height: 3px; background: var(--border); border-radius: 2px; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: var(--primary); margin-top: -6.5px; cursor: pointer; border: 2px solid var(--bg-deep); }
         
-        .chip-group { display: flex; gap: 8px; margin-bottom: 15px; }
-        .chip { padding: 8px 16px; border-radius: 20px; background: var(--card-bg); font-size: 11px; cursor: pointer; border: 1px solid var(--border); }
-        .chip.active { background: var(--accent); border-color: var(--accent); }
-        input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; margin: 10px 0; }
-        input[type="range"]::-webkit-slider-runnable-track { height: 4px; background: var(--border); border-radius: 2px; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%; background: var(--primary); margin-top: -7px; }
+        /* 메인 스테이지 */
+        .main-stage { display: flex; flex-direction: column; align-items: center; justify-content: center; background-image: radial-gradient(circle at center, #1e1e1e 0%, #0a0a0a 100%); flex: 1; padding: 20px; position: relative; }
+        canvas { max-width: 95%; max-height: 85vh; border-radius: 4px; box-shadow: 0 40px 80px rgba(0,0,0,0.6); cursor: grab; touch-action: none; transition: filter 0.1s; }
         
-        @media (max-width: 1100px) { .app-container { grid-template-columns: 1fr; overflow-y: auto; } .panel { height: auto; position: static; } .main-stage { min-height: 60vh; } }
+        #save-btn { background: linear-gradient(135deg, var(--primary), #eb3b5a); color: white; border: none; padding: 16px; border-radius: 50px; font-size: 15px; font-weight: 800; cursor: pointer; width: 100%; margin-top: 15px; box-shadow: 0 10px 25px rgba(255, 71, 87, 0.3); transition: 0.3s; }
+        #save-btn:active { transform: scale(0.98); }
+
+        .chip-group { display: flex; gap: 6px; }
+        .chip { flex: 1; text-align: center; padding: 8px; border-radius: 10px; background: var(--card-bg); font-size: 11px; cursor: pointer; border: 1px solid var(--border); }
+        .chip.active { background: var(--accent); border-color: var(--accent); font-weight: 800; }
+
+        @media (max-width: 1100px) { .app-container { grid-template-columns: 1fr; overflow-y: auto; } .panel { height: auto; border-right: none; } .main-stage { min-height: 70vh; } }
     </style>
 </head>
 <body>
     <div class="app-container">
         <aside class="panel">
-            <h1>UMA Snap</h1>
+            <h1>UMA Snap<span style="font-size: 12px; font-weight: 400; color: var(--text-dim); vertical-align: middle;">ULTRA</span></h1>
+            
             <input type="file" id="file-input" accept="image/*" style="display: none;">
-            <div id="drop-zone" onclick="document.getElementById('file-input').click()">이미지 라이브러리 열기</div>
+            <div id="drop-zone" onclick="document.getElementById('file-input').click()">📁 이미지 불러오기 (Drag & Drop)</div>
 
             <div class="section-header">Frames</div>
             <div class="frame-grid">
@@ -66,25 +79,41 @@
                 <img src="250605_umasnap_frame_rs.png" class="frame-thumb" onclick="changeFrame(this, '250605_umasnap_frame_rs.png')">
             </div>
 
-            <div style="margin-top:25px" class="section-header">Adjustments</div>
-            <input type="range" id="zoom" min="0.1" max="5" step="0.01" value="2.5">
-            <input type="range" id="moveX" min="-2000" max="2000" value="0">
-            <input type="range" id="moveY" min="-2000" max="2000" value="0">
-            <button onclick="resetPosition()" style="background:none; border:none; color:var(--accent); font-size:11px; cursor:pointer;">Reset View</button>
+            <div class="section-header">Quick Tools</div>
+            <div class="tool-group">
+                <button class="tool-btn" onclick="rotatePhoto()">🔄 90° 회전</button>
+                <button class="tool-btn" onclick="flipPhoto()">↔️ 좌우 반전</button>
+            </div>
 
-            <div style="margin-top:25px" class="section-header">Export Settings</div>
+            <div class="section-header">Adjustments</div>
+            <div class="control-item">
+                <div class="label-row"><span>Zoom</span><span id="z-val">2.5x</span></div>
+                <input type="range" id="zoom" min="0.1" max="5" step="0.01" value="2.5">
+            </div>
+            <div class="control-item">
+                <div class="label-row"><span>Brightness</span><span id="b-val">100%</span></div>
+                <input type="range" id="bright" min="50" max="150" step="1" value="100">
+            </div>
+            <div class="control-item">
+                <div class="label-row"><span>Contrast</span><span id="c-val">100%</span></div>
+                <input type="range" id="contrast" min="50" max="150" step="1" value="100">
+            </div>
+            <button onclick="resetPosition()" style="background:none; border:none; color:var(--accent); font-size:11px; cursor:pointer; width:100%; text-align:right;">설정 초기화 (R)</button>
+
+            <div class="section-header">Export</div>
             <div class="chip-group">
                 <label class="chip active"><input type="radio" name="format" value="webp" checked style="display:none"> WebP</label>
                 <label class="chip"><input type="radio" name="format" value="jpeg" style="display:none"> JPEG</label>
                 <label class="chip"><input type="radio" name="format" value="png" style="display:none"> PNG</label>
             </div>
-            <input type="range" id="quality" min="50" max="100" step="5" value="95">
-            <button id="save-btn">EXPORT SNAP</button>
+            <button id="save-btn">EXPORT SNAP (S)</button>
         </aside>
 
         <main class="main-stage" id="main-stage">
             <canvas id="main-canvas"></canvas>
-            <div style="font-size: 11px; color: var(--text-dim); margin-top: 15px;">Drag & Drop Image | Wheel to Zoom | Dbl-click to Fit</div>
+            <div style="font-size: 11px; color: var(--text-dim); margin-top: 15px; letter-spacing: 0.5px;">
+                Wheel to Zoom | Double-click to Reset | Drag & Drop Anywhere
+            </div>
         </main>
     </div>
 
@@ -99,8 +128,16 @@
         let userImg = new Image();
         let isUserImgLoaded = false;
         
-        // 초기 프레임을 리스트의 첫 번째 이미지로 설정
-        let state = { ratio: 0.75, zoom: 2.5, x: 0, y: 0, frameUrl: '250605_umasnap_frame.png', quality: 0.95 };
+        let state = { 
+            ratio: 0.75, zoom: 2.5, x: 0, y: 0, 
+            rotate: 0, flip: 1, // 회전 및 반전 상태
+            bright: 100, contrast: 100, // 보정 상태
+            frameUrl: '250605_umasnap_frame.png', quality: 0.95 
+        };
+
+        // --- 회전 및 반전 함수 ---
+        function rotatePhoto() { state.rotate = (state.rotate + 90) % 360; draw(); }
+        function flipPhoto() { state.flip *= -1; draw(); }
 
         // --- 드래그 앤 드롭 ---
         ['dragenter', 'dragover'].forEach(n => {
@@ -128,12 +165,27 @@
             reader.readAsDataURL(file);
         }
 
+        // --- 키보드 단축키 ---
+        window.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 's') document.getElementById('save-btn').click();
+            if (e.key.toLowerCase() === 'r') resetPosition();
+            if (isUserImgLoaded) {
+                const step = 5;
+                if (e.key === 'ArrowLeft') state.x -= step;
+                if (e.key === 'ArrowRight') state.x += step;
+                if (e.key === 'ArrowUp') state.y -= step;
+                if (e.key === 'ArrowDown') state.y += step;
+                draw();
+            }
+        });
+
         // --- 컨트롤러 ---
         canvas.addEventListener('wheel', e => {
             if (!isUserImgLoaded) return;
             e.preventDefault();
             state.zoom = Math.min(Math.max(state.zoom + (e.deltaY > 0 ? -0.1 : 0.1), 0.1), 5);
             document.getElementById('zoom').value = state.zoom;
+            document.getElementById('z-val').innerText = state.zoom.toFixed(2) + 'x';
             draw();
         }, { passive: false });
 
@@ -171,20 +223,17 @@
                 const curCY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
                 state.x = initialOffsetX + (curCX - initialCenterX) * (canvas.width / rect.width);
                 state.y = initialOffsetY + (curCY - initialCenterY) * (canvas.height / rect.height);
-                document.getElementById('moveX').value = state.x;
-                document.getElementById('moveY').value = state.y;
+                document.getElementById('moveX').value = state.x; document.getElementById('moveY').value = state.y;
             } else if (isDragging && e.touches.length === 1) {
                 state.x += (e.touches[0].clientX - lastX) * (canvas.width / rect.width);
                 state.y += (e.touches[0].clientY - lastY) * (canvas.height / rect.height);
                 lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
-                document.getElementById('moveX').value = state.x;
-                document.getElementById('moveY').value = state.y;
+                document.getElementById('moveX').value = state.x; document.getElementById('moveY').value = state.y;
             }
             draw();
         }, { passive: false });
 
         canvas.addEventListener('touchend', () => { isDragging = false; initialPinchDist = 0; });
-
         canvas.onmousedown = e => { if (isUserImgLoaded) { isDragging = true; lastX = e.clientX; lastY = e.clientY; } };
         window.onmousemove = e => {
             if (!isDragging) return;
@@ -192,8 +241,7 @@
             state.x += (e.clientX - lastX) * (canvas.width / rect.width);
             state.y += (e.clientY - lastY) * (canvas.height / rect.height);
             lastX = e.clientX; lastY = e.clientY;
-            document.getElementById('moveX').value = state.x;
-            document.getElementById('moveY').value = state.y;
+            document.getElementById('moveX').value = state.x; document.getElementById('moveY').value = state.y;
             draw();
         };
         window.onmouseup = () => isDragging = false;
@@ -214,16 +262,26 @@
         }
 
         function resetPosition() {
-            state.x = 0; state.y = 0; state.zoom = 2.5;
-            document.getElementById('moveX').value = 0;
-            document.getElementById('moveY').value = 0;
-            document.getElementById('zoom').value = 2.5;
+            state.x = 0; state.y = 0; state.zoom = 2.5; state.rotate = 0; state.flip = 1;
+            state.bright = 100; state.contrast = 100;
+            document.getElementById('moveX').value = 0; document.getElementById('moveY').value = 0;
+            document.getElementById('zoom').value = 2.5; document.getElementById('bright').value = 100;
+            document.getElementById('contrast').value = 100;
+            document.getElementById('z-val').innerText = '2.5x';
+            document.getElementById('b-val').innerText = '100%';
+            document.getElementById('c-val').innerText = '100%';
+            draw();
         }
 
         document.querySelectorAll('input[type="range"]').forEach(i => i.addEventListener('input', () => {
             state.zoom = parseFloat(document.getElementById('zoom').value);
+            state.bright = parseInt(document.getElementById('bright').value);
+            state.contrast = parseInt(document.getElementById('contrast').value);
             state.x = parseInt(document.getElementById('moveX').value);
             state.y = parseInt(document.getElementById('moveY').value);
+            document.getElementById('z-val').innerText = state.zoom.toFixed(2) + 'x';
+            document.getElementById('b-val').innerText = state.bright + '%';
+            document.getElementById('c-val').innerText = state.contrast + '%';
             draw();
         }));
 
@@ -234,13 +292,26 @@
 
         function draw() {
             canvas.width = 1080; canvas.height = 1440;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = "#111";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
             if (isUserImgLoaded) {
+                ctx.save();
+                // 캔버스 중앙으로 이동 후 변환
+                ctx.translate(canvas.width / 2 + state.x, canvas.height / 2 + state.y);
+                ctx.scale(state.flip, 1);
+                ctx.rotate(state.rotate * Math.PI / 180);
+                
+                // 필터 적용
+                ctx.filter = `brightness(${state.bright}%) contrast(${state.contrast}%)`;
+                
                 const imgW = userImg.width * state.zoom;
                 const imgH = userImg.height * state.zoom;
-                ctx.drawImage(userImg, (canvas.width - imgW) / 2 + state.x, (canvas.height - imgH) / 2 + state.y, imgW, imgH);
+                ctx.drawImage(userImg, -imgW / 2, -imgH / 2, imgW, imgH);
+                ctx.restore();
             }
+            ctx.filter = "none";
             ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
         }
 
@@ -248,8 +319,8 @@
             if (!isUserImgLoaded) return;
             const format = document.querySelector('input[name="format"]:checked').value;
             const link = document.createElement('a');
-            link.download = `UMASNAP_PRO_${Date.now()}.${format}`;
-            link.href = canvas.toDataURL(`image/${format}`, state.quality);
+            link.download = `UMASNAP_ULTRA_${Date.now()}.${format}`;
+            link.href = canvas.toDataURL(`image/${format}`, 0.95);
             link.click();
         };
     </script>
